@@ -26,24 +26,16 @@ class Node(models.Model):
     """
 
     # Identity and metadata
-    mesh_identity = models.CharField(
-        max_length=64, unique=True, help_text="Unique mesh network identity hash"
-    )
-    public_key = models.TextField(
-        unique=True, db_index=True, help_text="Cryptographic public key for the node"
-    )
+    mesh_identity = models.CharField(max_length=64, unique=True, help_text="Unique mesh network identity hash")
+    public_key = models.TextField(unique=True, db_index=True, help_text="Cryptographic public key for the node")
     firmware_version = models.CharField(max_length=32, default="v1.9.1")
     role = models.IntegerField(choices=Role.choices, default=Role.REPEATER)
 
     # Location and deployment info
     name = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    latitude = models.DecimalField(
-        max_digits=9, decimal_places=6, null=True, blank=True
-    )
-    longitude = models.DecimalField(
-        max_digits=9, decimal_places=6, null=True, blank=True
-    )
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     altitude = models.DecimalField(
         max_digits=7,
         decimal_places=2,
@@ -53,10 +45,9 @@ class Node(models.Model):
     )
 
     # Administrative fields
-    owner = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="nodes", null=True, blank=True
-    )
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="nodes", null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    is_favourite = models.BooleanField(default=False)
     first_seen = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
 
@@ -73,27 +64,17 @@ class RepeaterStats(models.Model):
     Telemetry data from MeshCore repeaters.
     """
 
-    node = models.ForeignKey(
-        Node, on_delete=models.CASCADE, related_name="telemetry_readings"
-    )
+    node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name="telemetry_readings")
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
 
     # Power metrics
-    batt_milli_volts = models.PositiveIntegerField(
-        help_text="Battery voltage in millivolts"
-    )
+    batt_milli_volts = models.PositiveIntegerField(help_text="Battery voltage in millivolts")
 
     # Queue and signal metrics
-    curr_tx_queue_len = models.PositiveIntegerField(
-        help_text="Current transmit queue length"
-    )
+    curr_tx_queue_len = models.PositiveIntegerField(help_text="Current transmit queue length")
     noise_floor = models.SmallIntegerField(help_text="Noise floor in dBm")
-    last_rssi = models.SmallIntegerField(
-        help_text="Last RSSI (Received Signal Strength Indicator) in dBm"
-    )
-    last_snr = models.SmallIntegerField(
-        help_text="Last SNR (Signal-to-Noise Ratio) in dB"
-    )
+    last_rssi = models.SmallIntegerField(help_text="Last RSSI (Received Signal Strength Indicator) in dBm")
+    last_snr = models.SmallIntegerField(help_text="Last SNR (Signal-to-Noise Ratio) in dB")
 
     # Packet statistics
     n_packets_recv = models.PositiveBigIntegerField(help_text="Total packets received")
@@ -106,15 +87,9 @@ class RepeaterStats(models.Model):
     n_direct_dups = models.PositiveIntegerField(help_text="Duplicate direct packets")
 
     # Time metrics
-    total_air_time_secs = models.PositiveBigIntegerField(
-        help_text="Total air time in seconds (TX)"
-    )
-    total_rx_air_time_secs = models.PositiveBigIntegerField(
-        help_text="Total air time in seconds (RX)"
-    )
-    total_up_time_secs = models.PositiveBigIntegerField(
-        help_text="Total uptime in seconds"
-    )
+    total_air_time_secs = models.PositiveBigIntegerField(help_text="Total air time in seconds (TX)")
+    total_rx_air_time_secs = models.PositiveBigIntegerField(help_text="Total air time in seconds (RX)")
+    total_up_time_secs = models.PositiveBigIntegerField(help_text="Total uptime in seconds")
 
     # Error tracking
     err_events = models.PositiveIntegerField(help_text="Number of error events")
@@ -139,19 +114,11 @@ class NeighbourInfo(models.Model):
     """
 
     node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name="neighbours")
-    neighbour = models.ForeignKey(
-        Node, on_delete=models.CASCADE, related_name="heard_by"
-    )
-    advert_timestamp = models.PositiveBigIntegerField(
-        help_text="Advertisement timestamp from firmware"
-    )
-    heard_timestamp = models.PositiveBigIntegerField(
-        help_text="Last heard timestamp from firmware"
-    )
+    neighbour = models.ForeignKey(Node, on_delete=models.CASCADE, related_name="heard_by")
+    advert_timestamp = models.PositiveBigIntegerField(help_text="Advertisement timestamp from firmware")
+    heard_timestamp = models.PositiveBigIntegerField(help_text="Last heard timestamp from firmware")
     last_updated = models.DateTimeField(auto_now=True)
-    snr = models.SmallIntegerField(
-        help_text="Signal-to-Noise Ratio (multiplied by 4 in firmware)"
-    )
+    snr = models.SmallIntegerField(help_text="Signal-to-Noise Ratio (multiplied by 4 in firmware)")
 
     class Meta:
         unique_together = ["node", "neighbour"]

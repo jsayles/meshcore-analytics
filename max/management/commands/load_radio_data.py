@@ -2,6 +2,7 @@
 Load contacts from USB radio into database.
 Usage: python manage.py load_radio_data
 """
+
 import asyncio
 from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand, CommandError
@@ -59,20 +60,20 @@ class Command(BaseCommand):
         self.stdout.write(f"Processing {len(contacts_data)} contacts...")
 
         for key, contact in contacts_data.items():
-            public_key = contact.get('public_key', '')
+            public_key = contact.get("public_key", "")
             if not public_key:
                 continue
 
-            mesh_identity = contact.get('mesh_identity', public_key[:16])
+            mesh_identity = contact.get("mesh_identity", public_key[:16])
 
             node, created = await sync_to_async(Node.objects.update_or_create)(
                 mesh_identity=mesh_identity,
                 defaults={
-                    'public_key': public_key,
-                    'name': contact.get('adv_name', ''),
-                    'role': contact.get('role', 0),
-                    'last_seen': timezone.now(),
-                }
+                    "public_key": public_key,
+                    "name": contact.get("adv_name", ""),
+                    "role": contact.get("type", 0),
+                    "last_seen": timezone.now(),
+                },
             )
 
             status = "Created" if created else "Updated"

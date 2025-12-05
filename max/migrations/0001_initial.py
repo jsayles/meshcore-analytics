@@ -31,9 +31,7 @@ class Migration(migrations.Migration):
                 ("password", models.CharField(max_length=128, verbose_name="password")),
                 (
                     "last_login",
-                    models.DateTimeField(
-                        blank=True, null=True, verbose_name="last login"
-                    ),
+                    models.DateTimeField(blank=True, null=True, verbose_name="last login"),
                 ),
                 (
                     "is_superuser",
@@ -46,35 +44,25 @@ class Migration(migrations.Migration):
                 (
                     "username",
                     models.CharField(
-                        error_messages={
-                            "unique": "A user with that username already exists."
-                        },
+                        error_messages={"unique": "A user with that username already exists."},
                         help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
                         max_length=150,
                         unique=True,
-                        validators=[
-                            django.contrib.auth.validators.UnicodeUsernameValidator()
-                        ],
+                        validators=[django.contrib.auth.validators.UnicodeUsernameValidator()],
                         verbose_name="username",
                     ),
                 ),
                 (
                     "first_name",
-                    models.CharField(
-                        blank=True, max_length=150, verbose_name="first name"
-                    ),
+                    models.CharField(blank=True, max_length=150, verbose_name="first name"),
                 ),
                 (
                     "last_name",
-                    models.CharField(
-                        blank=True, max_length=150, verbose_name="last name"
-                    ),
+                    models.CharField(blank=True, max_length=150, verbose_name="last name"),
                 ),
                 (
                     "email",
-                    models.EmailField(
-                        blank=True, max_length=254, verbose_name="email address"
-                    ),
+                    models.EmailField(blank=True, max_length=254, verbose_name="email address"),
                 ),
                 (
                     "is_staff",
@@ -94,9 +82,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "date_joined",
-                    models.DateTimeField(
-                        default=django.utils.timezone.now, verbose_name="date joined"
-                    ),
+                    models.DateTimeField(default=django.utils.timezone.now, verbose_name="date joined"),
                 ),
                 (
                     "groups",
@@ -175,15 +161,11 @@ class Migration(migrations.Migration):
                 ("description", models.TextField(blank=True)),
                 (
                     "latitude",
-                    models.DecimalField(
-                        blank=True, decimal_places=6, max_digits=9, null=True
-                    ),
+                    models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True),
                 ),
                 (
                     "longitude",
-                    models.DecimalField(
-                        blank=True, decimal_places=6, max_digits=9, null=True
-                    ),
+                    models.DecimalField(blank=True, decimal_places=6, max_digits=9, null=True),
                 ),
                 (
                     "altitude",
@@ -229,15 +211,11 @@ class Migration(migrations.Migration):
                 ("timestamp", models.DateTimeField(auto_now_add=True, db_index=True)),
                 (
                     "batt_milli_volts",
-                    models.PositiveIntegerField(
-                        help_text="Battery voltage in millivolts"
-                    ),
+                    models.PositiveIntegerField(help_text="Battery voltage in millivolts"),
                 ),
                 (
                     "curr_tx_queue_len",
-                    models.PositiveIntegerField(
-                        help_text="Current transmit queue length"
-                    ),
+                    models.PositiveIntegerField(help_text="Current transmit queue length"),
                 ),
                 (
                     "noise_floor",
@@ -245,15 +223,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "last_rssi",
-                    models.SmallIntegerField(
-                        help_text="Last RSSI (Received Signal Strength Indicator) in dBm"
-                    ),
+                    models.SmallIntegerField(help_text="Last RSSI (Received Signal Strength Indicator) in dBm"),
                 ),
                 (
                     "last_snr",
-                    models.SmallIntegerField(
-                        help_text="Last SNR (Signal-to-Noise Ratio) in dB"
-                    ),
+                    models.SmallIntegerField(help_text="Last SNR (Signal-to-Noise Ratio) in dB"),
                 ),
                 (
                     "n_packets_recv",
@@ -289,15 +263,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "total_air_time_secs",
-                    models.PositiveBigIntegerField(
-                        help_text="Total air time in seconds (TX)"
-                    ),
+                    models.PositiveBigIntegerField(help_text="Total air time in seconds (TX)"),
                 ),
                 (
                     "total_rx_air_time_secs",
-                    models.PositiveBigIntegerField(
-                        help_text="Total air time in seconds (RX)"
-                    ),
+                    models.PositiveBigIntegerField(help_text="Total air time in seconds (RX)"),
                 ),
                 (
                     "total_up_time_secs",
@@ -336,22 +306,16 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "advert_timestamp",
-                    models.PositiveBigIntegerField(
-                        help_text="Advertisement timestamp from firmware"
-                    ),
+                    models.PositiveBigIntegerField(help_text="Advertisement timestamp from firmware"),
                 ),
                 (
                     "heard_timestamp",
-                    models.PositiveBigIntegerField(
-                        help_text="Last heard timestamp from firmware"
-                    ),
+                    models.PositiveBigIntegerField(help_text="Last heard timestamp from firmware"),
                 ),
                 ("last_updated", models.DateTimeField(auto_now=True)),
                 (
                     "snr",
-                    models.SmallIntegerField(
-                        help_text="Signal-to-Noise Ratio (multiplied by 4 in firmware)"
-                    ),
+                    models.SmallIntegerField(help_text="Signal-to-Noise Ratio (multiplied by 4 in firmware)"),
                 ),
                 (
                     "neighbour",

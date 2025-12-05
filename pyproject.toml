@@ -9,7 +9,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "django~=5.2",
+    "django~=6.0",
     "djangorestframework~=3.16",
     "meshcore~=2.1",
 ]
@@ -23,3 +23,24 @@ review = "max.scripts:review"
 dev = [
     "ruff>=0.14.4",
 ]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 127
+indent-width = 4
+exclude = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+# Aspire to include all DJ rules --JLS
+# https://pypi.org/project/flake8-django/
+# https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/#model-style
+ignore = ["DJ001", "DJ006", "EM101"]
+select = ["E", "F", "W", "UP", "EM", "DJ"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+
