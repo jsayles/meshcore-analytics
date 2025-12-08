@@ -22,11 +22,15 @@ django_asgi_app = get_asgi_application()
 
 from max.consumers import SignalStreamConsumer
 
-application = ProtocolTypeRouter({
-    "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(
-        URLRouter([
-            path("ws/signal/", SignalStreamConsumer.as_asgi()),
-        ])
-    ),
-})
+application = ProtocolTypeRouter(
+    {
+        "http": django_asgi_app,
+        "websocket": AuthMiddlewareStack(
+            URLRouter(
+                [
+                    path("ws/signal/", SignalStreamConsumer.as_asgi()),
+                ]
+            )
+        ),
+    }
+)

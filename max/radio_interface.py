@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Try to import serial and meshcore libraries
 try:
     import serial
+
     SERIAL_AVAILABLE = True
 except ImportError:
     SERIAL_AVAILABLE = False
@@ -19,6 +20,7 @@ except ImportError:
 
 try:
     import meshcore
+
     MESHCORE_AVAILABLE = True
 except ImportError:
     MESHCORE_AVAILABLE = False
@@ -62,11 +64,7 @@ class RadioInterface:
             return True
 
         try:
-            self.serial = serial.Serial(
-                self.port,
-                settings.MESHCORE_BAUD_RATE,
-                timeout=1
-            )
+            self.serial = serial.Serial(self.port, settings.MESHCORE_BAUD_RATE, timeout=1)
 
             # Initialize MeshCore radio connection
             self.radio = meshcore.Radio(self.serial)
@@ -110,10 +108,7 @@ class RadioInterface:
 
             # Extract RSSI and SNR from stats
             # Adjust field names based on actual meshcore library response
-            return {
-                "rssi": stats.get("last_rssi") or stats.get("rssi"),
-                "snr": stats.get("last_snr") or stats.get("snr")
-            }
+            return {"rssi": stats.get("last_rssi") or stats.get("rssi"), "snr": stats.get("last_snr") or stats.get("snr")}
 
         except Exception as e:
             logger.error(f"Failed to read signal from radio: {e}")
@@ -123,10 +118,7 @@ class RadioInterface:
         """Generate mock signal data for testing."""
         import random
 
-        return {
-            "rssi": random.randint(-100, -40),
-            "snr": random.randint(-5, 15)
-        }
+        return {"rssi": random.randint(-100, -40), "snr": random.randint(-5, 15)}
 
     def __enter__(self):
         """Context manager support."""

@@ -46,10 +46,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         logger.info("Phone connected to WebSocket")
 
         # Send welcome message
-        await self.send(text_data=json.dumps({
-            "type": "connected",
-            "message": "Connected to Pi"
-        }))
+        await self.send(text_data=json.dumps({"type": "connected", "message": "Connected to Pi"}))
 
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection."""
@@ -96,7 +93,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
                 "longitude": gps_data.get("longitude"),
                 "altitude": gps_data.get("altitude"),
                 "accuracy": gps_data.get("accuracy"),
-                "timestamp": gps_data.get("timestamp")
+                "timestamp": gps_data.get("timestamp"),
             }
 
             logger.debug(f"GPS updated: {self.current_gps['latitude']}, {self.current_gps['longitude']}")
@@ -141,21 +138,22 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
 
             # Save measurement to database
             measurement_id = await self.save_measurement(
-                target_node_id=target_node_id,
-                session_id=session_id,
-                gps_data=self.current_gps,
-                signal_data=signal_data
+                target_node_id=target_node_id, session_id=session_id, gps_data=self.current_gps, signal_data=signal_data
             )
 
             # Send confirmation to phone
-            await self.send(text_data=json.dumps({
-                "type": "measurement_saved",
-                "measurement_id": measurement_id,
-                "rssi": signal_data["rssi"],
-                "snr": signal_data["snr"],
-                "latitude": self.current_gps["latitude"],
-                "longitude": self.current_gps["longitude"]
-            }))
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "type": "measurement_saved",
+                        "measurement_id": measurement_id,
+                        "rssi": signal_data["rssi"],
+                        "snr": signal_data["snr"],
+                        "latitude": self.current_gps["latitude"],
+                        "longitude": self.current_gps["longitude"],
+                    }
+                )
+            )
 
             logger.info(f"Measurement saved: {measurement_id}")
 
@@ -203,11 +201,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
             target_node = Node.objects.get(id=target_node_id)
 
             # Create Point for location
-            location = Point(
-                gps_data["longitude"],
-                gps_data["latitude"],
-                srid=4326
-            )
+            location = Point(gps_data["longitude"], gps_data["latitude"], srid=4326)
 
             # Create measurement
             measurement = SignalMeasurement.objects.create(
@@ -218,7 +212,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
                 rssi=signal_data["rssi"],
                 snr=signal_data["snr"],
                 session_id=session_id,
-                collector_user=None  # Anonymous for now
+                collector_user=None,  # Anonymous for now
             )
 
             return measurement.id
@@ -231,10 +225,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
 
     async def send_error(self, message):
         """Send error message to phone."""
-        await self.send(text_data=json.dumps({
-            "type": "error",
-            "message": message
-        }))
+        await self.send(text_data=json.dumps({"type": "error", "message": message}))
 
     async def send_signal_update(self, signal_data):
         """
@@ -245,9 +236,13 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         Args:
             signal_data: dict with rssi, snr, timestamp
         """
-        await self.send(text_data=json.dumps({
-            "type": "signal_data",
-            "rssi": signal_data["rssi"],
-            "snr": signal_data["snr"],
-            "timestamp": signal_data["timestamp"]
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "signal_data",
+                    "rssi": signal_data["rssi"],
+                    "snr": signal_data["snr"],
+                    "timestamp": signal_data["timestamp"],
+                }
+            )
+        )
