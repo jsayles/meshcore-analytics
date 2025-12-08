@@ -1,13 +1,13 @@
 /**
- * Pi Connection Handler via WebSocket
+ * WebSocket Connection Handler
  *
- * Connects phone browser to Raspberry Pi running Django/Channels.
- * - Streams GPS from phone to Pi
- * - Receives signal data from Pi (which reads from USB radio)
+ * Connects browser to Django/Channels WebSocket server.
+ * - Streams GPS from browser to server
+ * - Receives signal data from server (which reads from USB radio)
  * - Handles real-time measurement collection
  */
 
-export class PiConnection {
+export class WebSocketConnection {
     constructor() {
         this.ws = null;
         this.isConnected = false;

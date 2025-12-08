@@ -1,17 +1,17 @@
 /**
  * Signal Mapper Main Application
  *
- * Coordinates Pi WebSocket connection, measurement collection, and heatmap rendering.
+ * Coordinates WebSocket connection, measurement collection, and heatmap rendering.
  */
 
-import { PiConnection } from './pi-connection.js';
+import { WebSocketConnection } from './ws-connection.js';
 import { MeasurementCollector } from './measurement-collector.js';
 import { HeatmapRenderer } from './heatmap-renderer.js';
 
 class SignalMapper {
     constructor() {
         this.map = null;
-        this.piConnection = new PiConnection();
+        this.wsConnection = new WebSocketConnection();
         this.collector = null;
         this.heatmapRenderer = null;
         this.sessionId = this.generateUUID();
@@ -41,7 +41,7 @@ class SignalMapper {
         document.getElementById('session-id').textContent = this.sessionId.substring(0, 8);
 
         // Show status message
-        this.showMessage('Ready to connect. Click "Connect to Pi" to start.', 'info');
+        this.showMessage('Ready to connect. Click "Connect" to start.', 'info');
 
         // Try to get user's location to center map
         this.centerMapOnUser();
@@ -110,9 +110,9 @@ class SignalMapper {
             btn.textContent = 'Connecting...';
 
             // Set up connection state callback
-            this.piConnection.onConnectionChange = (connected) => {
+            this.wsConnection.onConnectionChange = (connected) => {
                 if (connected) {
-                    status.textContent = 'Connected to Pi';
+                    status.textContent = 'Connected';
                     status.className = 'status connected';
                 } else {
                     status.textContent = 'Disconnected';
@@ -120,11 +120,11 @@ class SignalMapper {
                 }
             };
 
-            // Connect to Pi WebSocket
-            await this.piConnection.connect();
+            // Connect via WebSocket
+            await this.wsConnection.connect();
 
             btn.textContent = 'Connected';
-            this.showMessage('Connected to Pi! GPS streaming started. Select a target repeater.', 'success');
+            this.showMessage('Connected! GPS streaming started. Select a target repeater.', 'success');
 
             // Load repeaters
             await this.loadRepeaters();
@@ -195,7 +195,7 @@ class SignalMapper {
 
             if (!this.collector) {
                 this.collector = new MeasurementCollector(
-                    this.piConnection,
+                    this.wsConnection,
                     this.targetNodeId,
                     this.sessionId
                 );
@@ -229,7 +229,7 @@ class SignalMapper {
 
         if (!this.collector) {
             this.collector = new MeasurementCollector(
-                this.piConnection,
+                this.wsConnection,
                 this.targetNodeId,
                 this.sessionId
             );
