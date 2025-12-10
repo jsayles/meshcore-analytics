@@ -9,12 +9,12 @@ import { MeasurementCollector } from './measurement-collector.js';
 import { HeatmapRenderer } from './heatmap-renderer.js';
 
 class SignalMapper {
-    constructor() {
+    constructor(sessionId) {
         this.map = null;
         this.wsConnection = new WebSocketConnection();
         this.collector = null;
         this.heatmapRenderer = null;
-        this.sessionId = this.generateUUID();
+        this.sessionId = sessionId;
         this.targetNodeId = null;
         this.repeaters = [];
         this.currentStep = 1;
@@ -431,16 +431,7 @@ class SignalMapper {
         }, 5000);
     }
 
-    /**
-     * Generate UUID v4
-     */
-    generateUUID() {
-        return crypto.randomUUID();
-    }
 }
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new SignalMapper();
-    app.init();
-});
+// Export SignalMapper
+export { SignalMapper };

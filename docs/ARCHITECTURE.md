@@ -38,12 +38,15 @@ The application is designed to run on a Raspberry Pi carried during field operat
 **Purpose:** Create signal coverage heatmaps for specific repeater nodes during field surveys.
 
 **Capabilities:**
-- Select target repeater to test
+- Select target repeater to test (via dropdown or URL parameter)
 - Collect GPS coordinates + signal strength measurements
 - Manual or continuous (interval-based) collection modes
 - Real-time heatmap visualization with color-coded signal strength
-- Session tracking for organized data collection
-- Export coverage maps as GeoJSON
+- Session-based measurement tracking (Django session IDs)
+- Responsive sidebar interface (420px width)
+- Mobile-friendly with automatic GPS streaming
+- Automatic heatmap updates after each measurement
+- Map centered on Vancouver, BC by default
 
 **Data Sources:**
 - Phone GPS via browser Geolocation API
@@ -51,9 +54,12 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - Combined by Pi and stored in PostGIS database
 
 **Current Status:**
-- Frontend web interface complete (Leaflet.js map)
-- REST API for measurements functional
-- WebSocket integration needed for Pi architecture
+- ✅ Frontend web interface complete (Leaflet.js map)
+- ✅ REST API for measurements functional
+- ✅ WebSocket integration complete for GPS streaming
+- ✅ Session-based tracking with Django sessions
+- ✅ 3-step setup workflow with progress indicators
+- ✅ Responsive design for mobile devices
 
 ### Feature Integration
 
@@ -149,28 +155,49 @@ Both features share:
 
 ### Signal Mapper Flow
 
-1. **GPS Streaming** (Phone → Pi)
-   - Phone browser establishes WebSocket connection to Pi
-   - Browser Geolocation API streams GPS coordinates
-   - WebSocket sends GPS data to Pi in real-time
+**3-Step Setup Process:**
 
-2. **Signal Monitoring** (Radio → Pi)
-   - Pi reads from USB serial port (`/dev/ttyACM0`)
-   - Background service polls MeshCore radio for current signal stats
-   - Extracts RSSI, SNR for target repeater
+1. **Step 1: Repeater Selection**
+   - User navigates to `/mapper/?node=<id>` (pre-selected) or `/mapper/` (manual selection)
+   - API fetches active repeater nodes: `GET /api/v1/nodes/?role=0&is_active=true`
+   - If pre-selected via URL, shows repeater name in status
+   - If manual, shows dropdown to select from available repeaters
+   - Page redirects to URL with node parameter when repeater selected
+   - Step marked complete when repeater chosen
 
-3. **Data Combination** (Pi Processing)
-   - Pi receives GPS from WebSocket
-   - Pi reads signal data from radio
-   - Combines GPS + signal into `SignalMeasurement`
-   - Stores in PostGIS database with spatial indexing
+2. **Step 2: Location Tracking**
+   - Browser automatically requests GPS permission on page load
+   - Geolocation API centers map on user's current location
+   - Step marked complete with "Enabled" status
+   - Falls back to Vancouver, BC center if permission denied
 
-4. **Visualization** (Pi → Phone)
-   - User triggers heatmap generation via web interface
-   - Pi queries measurements for selected node and session
-   - Generates GeoJSON with signal strength data
-   - Phone browser displays coverage heatmap with Leaflet.js
-   - Color gradient: Blue (weak) → Red (strong)
+3. **Step 3: Companion Radio**
+   - User clicks "Connect" button to establish WebSocket connection
+   - WebSocket connects to `ws://[host]/ws/signal/`
+   - Connection includes Django session ID for measurement tracking
+   - GPS streaming begins automatically on successful connection
+   - Step marked complete with "Connected" status
+   - All steps lose active highlighting when complete
+
+**Collection Process:**
+
+4. **Measurement Collection** (appears after setup complete)
+   - **Manual Mode**: Single measurement on button click
+   - **Continuous Mode**: Interval-based collection (configurable seconds)
+   - Each collection triggers:
+     - GPS coordinates retrieved from browser
+     - WebSocket sends GPS + collection request to Pi
+     - Pi reads current signal data from USB radio (RSSI/SNR)
+     - Pi combines GPS + signal → `SignalMeasurement` in database
+     - API returns measurement count and last readings
+     - Client updates stats display
+
+5. **Automatic Heatmap Updates**
+   - After each measurement, client fetches updated data
+   - API query: `GET /api/v1/measurements/?target_node=<id>&session=<session_id>`
+   - Client renders heatmap using Leaflet.heat plugin
+   - Color gradient: Blue (weak signal) → Red (strong signal)
+   - Map updates in real-time as measurements are collected
 
 ### Measurement Data Structure
 
@@ -185,10 +212,16 @@ Both features share:
   "target_node": "node_id",
   "rssi": -78,
   "snr": 12.5,
-  "session_id": "uuid",
+  "session_id": "django_session_key",
   "timestamp": "2025-12-08T12:34:56Z"
 }
 ```
+
+**Session Tracking:**
+- Session IDs are generated server-side using Django's session framework
+- Each browser session gets a unique session key
+- All measurements in a field survey are grouped by session ID
+- Enables viewing/replaying specific survey sessions
 
 ## Technology Stack
 
@@ -230,6 +263,10 @@ Both features share:
 - Works on iOS Safari and Android Chrome
 - No build step required
 - Shared base template with navigation
+- 420px responsive sidebar for controls
+- Mobile-optimized with viewport settings
+- Progress indicators with 3-step checklist
+- Real-time status updates and messaging
 
 ### MeshCore Integration
 
@@ -248,9 +285,11 @@ Both features share:
 
 ### HTTP/HTTPS
 - Web interface: `http://meshmap.local/`
+- Signal Mapper: `http://meshmap.local/mapper/` or `http://meshmap.local/mapper/?node=<id>`
 - Repeater Monitor: `http://meshmap.local/monitor/` (planned)
-- Signal Mapper: `http://meshmap.local/mapper/` (current: `/`)
 - REST API: `http://meshmap.local/api/v1/`
+  - Nodes: `GET /api/v1/nodes/?role=0&is_active=true`
+  - Measurements: `GET/POST /api/v1/measurements/`
 - Django admin: `http://meshmap.local/admin/`
 
 ### WebSocket
@@ -311,11 +350,12 @@ Both features share:
 
 ### URL Routing
 ```
-/                          → Landing page / Dashboard
+/                          → Mesh network home (map overview)
+/mapper/                   → Signal Mapper (can include ?node=<id> parameter)
 /monitor/                  → Repeater Monitor (planned)
-/mapper/                   → Signal Mapper (current: /)
+/nodes/<id>/               → Node detail view
 /admin/                    → Django admin interface
-/api/v1/nodes/            → Node list (GET)
+/api/v1/nodes/            → Node list (GET) with filtering
 /api/v1/measurements/     → Signal measurements (GET/POST)
 /api/v1/repeater-stats/   → Repeater telemetry (planned)
 /ws/signal/               → WebSocket for GPS/signal streaming
@@ -424,12 +464,18 @@ sudo systemctl start meshcore-telemetry
 - [ ] Repeater performance comparison tools
 
 ### Signal Mapper
-- [ ] Real-time heatmap updates during collection
+- [x] 3-step setup workflow with progress indicators
+- [x] Session-based measurement tracking
+- [x] Real-time heatmap updates during collection
+- [x] Mobile-friendly responsive interface
+- [x] WebSocket GPS streaming
+- [x] Manual and continuous collection modes
 - [ ] Offline capability with sync when connected
 - [ ] Multiple simultaneous target node monitoring
 - [ ] Export measurements as GeoJSON/KML/CSV
 - [ ] Advanced interpolation algorithms (kriging, IDW)
 - [ ] 3D signal propagation visualization
+- [ ] Historical session playback and comparison
 
 ### Shared Infrastructure
 - [ ] Progressive Web App (PWA) for offline UI

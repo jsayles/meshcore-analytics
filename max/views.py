@@ -15,4 +15,11 @@ def node_detail(request, node_id):
 
 def signal_mapper(request):
     """Render the signal mapping interface"""
-    return render(request, "max/signal_mapper.html")
+    # Ensure session is created
+    if not request.session.session_key:
+        request.session.create()
+
+    context = {
+        'session_id': request.session.session_key
+    }
+    return render(request, "max/signal_mapper.html", context)

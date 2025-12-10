@@ -106,4 +106,12 @@
 <script type="module" src="{% static 'max/js/measurement-collector.js' %}"></script>
 <script type="module" src="{% static 'max/js/heatmap-renderer.js' %}"></script>
 <script type="module" src="{% static 'max/js/signal-mapper.js' %}"></script>
+<script type="module">
+    import { SignalMapper } from "{% static 'max/js/signal-mapper.js' %}";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const app = new SignalMapper("{{ session_id }}");
+        app.init();
+    });
+</script>
 {% endblock %}

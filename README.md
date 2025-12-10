@@ -87,12 +87,24 @@ uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application
 
 ## Signal Mapper Workflow
 
-1. Open http://localhost:8000/ in browser
-2. Click "Connect to Pi" → WebSocket established, GPS streaming starts
-3. Select target repeater from dropdown
-4. Click "Collect Now" to capture measurement (mock RSSI/SNR)
-5. Repeat at different locations
-6. Click "Load Heatmap" to visualize coverage
+1. Open http://localhost:8000/ or http://localhost:8000/mapper/?node=<id> in browser
+2. **Setup Steps** (3-step checklist):
+   - **Step 1 - Repeater**: Select target repeater from dropdown (or pre-selected via URL)
+   - **Step 2 - Location Tracking**: Browser requests GPS permission (automatically)
+   - **Step 3 - Companion Radio**: Click "Connect" to establish WebSocket connection
+3. **Collection** (appears after setup complete):
+   - Choose Manual or Continuous mode
+   - Click "Collect Now" for single measurement
+   - Or set interval and "Start Collection" for continuous measurements
+4. **Visualization**: Heatmap automatically updates with new measurements
+
+**Features:**
+- Session-based measurement tracking (uses Django session ID)
+- Real-time heatmap rendering with color-coded signal strength
+- Responsive sidebar (420px) with progress indicators
+- Mobile-friendly interface with viewport optimization
+- Automatic GPS streaming to Pi via WebSocket
+- Map centered on Vancouver, BC by default
 
 **Mode Selection:**
 - **Mock Mode** (`USE_MOCK_RADIO=True`): Uses random signal values for testing
