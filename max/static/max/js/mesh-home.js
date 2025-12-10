@@ -9,6 +9,7 @@ class NodeOverview {
         this.nodes = [];
         this.markers = [];
         this.circles = [];
+        this.nodeMarkerMap = new Map(); // Map node ID to {marker, circle}
 
         this.init();
     }
@@ -46,6 +47,7 @@ class NodeOverview {
             }
 
             this.renderNodes();
+            this.renderRepeaterList();
             this.fitMapToNodes();
 
         } catch (error) {
@@ -60,6 +62,7 @@ class NodeOverview {
         this.circles.forEach(circle => this.map.removeLayer(circle));
         this.markers = [];
         this.circles = [];
+        this.nodeMarkerMap.clear();
 
         this.nodes.forEach(node => {
             const props = node.properties;
@@ -102,6 +105,9 @@ class NodeOverview {
                 .addTo(this.map);
 
             this.markers.push(marker);
+
+            // Store reference for hover highlighting
+            this.nodeMarkerMap.set(node.id, { marker, circle });
         });
     }
 
@@ -190,6 +196,95 @@ class NodeOverview {
         if (bounds.isValid()) {
             this.map.fitBounds(bounds, { padding: [100, 100] });
         }
+    }
+
+    renderRepeaterList() {
+        const listContainer = document.getElementById('repeater-list');
+        listContainer.innerHTML = '';
+
+        // Filter to only "Current" nodes (< 24 hours)
+        const currentNodes = this.nodes.filter(node => {
+            const status = this.getStatusLabel(node.properties.last_seen);
+            return status === 'Current';
+        });
+
+        // Sort by last_seen (most recent first) and take top 10
+        const topNodes = currentNodes
+            .sort((a, b) => {
+                const aTime = a.properties.last_seen ? new Date(a.properties.last_seen) : new Date(0);
+                const bTime = b.properties.last_seen ? new Date(b.properties.last_seen) : new Date(0);
+                return bTime - aTime;
+            })
+            .slice(0, 10);
+
+        if (topNodes.length === 0) {
+            listContainer.innerHTML = '<li style="color: var(--muted-color); font-style: italic;">No current repeaters</li>';
+            return;
+        }
+
+        topNodes.forEach(node => {
+            const li = document.createElement('li');
+            const nodeName = node.properties.name || node.properties.mesh_identity || 'Unnamed';
+            li.textContent = nodeName;
+            li.dataset.nodeId = node.id;
+
+            // Hover events
+            li.addEventListener('mouseenter', () => this.highlightNode(node.id));
+            li.addEventListener('mouseleave', () => this.unhighlightNode(node.id));
+
+            // Click to open popup
+            li.addEventListener('click', () => {
+                const nodeData = this.nodeMarkerMap.get(node.id);
+                if (nodeData) {
+                    nodeData.marker.openPopup();
+                    this.map.setView(nodeData.marker.getLatLng(), 14);
+                }
+            });
+
+            listContainer.appendChild(li);
+        });
+    }
+
+    highlightNode(nodeId) {
+        const nodeData = this.nodeMarkerMap.get(nodeId);
+        if (!nodeData) return;
+
+        // Highlight marker
+        const markerElement = nodeData.marker.getElement();
+        if (markerElement) {
+            const dotMarker = markerElement.querySelector('.dot-marker');
+            if (dotMarker) {
+                dotMarker.classList.add('highlighted');
+            }
+        }
+
+        // Highlight circle
+        nodeData.circle.setStyle({
+            weight: 3,
+            opacity: 0.8,
+            fillOpacity: 0.2
+        });
+    }
+
+    unhighlightNode(nodeId) {
+        const nodeData = this.nodeMarkerMap.get(nodeId);
+        if (!nodeData) return;
+
+        // Unhighlight marker
+        const markerElement = nodeData.marker.getElement();
+        if (markerElement) {
+            const dotMarker = markerElement.querySelector('.dot-marker');
+            if (dotMarker) {
+                dotMarker.classList.remove('highlighted');
+            }
+        }
+
+        // Unhighlight circle
+        nodeData.circle.setStyle({
+            weight: 2,
+            opacity: 0.4,
+            fillOpacity: 0.1
+        });
     }
 
     updateStats() {
