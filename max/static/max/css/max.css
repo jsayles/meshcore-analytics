@@ -11,9 +11,10 @@
     --secondary-color: #6c757d;
     --bg-color: #f8f9fa;
     --text-color: #212529;
+    --muted-color: #6c757d;
     --border-color: #dee2e6;
     --inactive-color: #95a5a6;
-    --sidebar-width: 350px;
+    --sidebar-width: 420px;
 }
 
 /* Reset */

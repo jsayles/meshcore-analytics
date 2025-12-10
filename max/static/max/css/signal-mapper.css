@@ -68,8 +68,95 @@
     cursor: pointer;
 }
 
-/* Session info */
-.session-info {
+/* Checklist styling */
+.checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.step {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    border-color: var(--primary-color);
+    background: #f0f7ff;
+}
+
+.step.completed {
+    opacity: 0.7;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.step.active .step-number {
+    background: var(--primary-color);
+    color: white;
+}
+
+.step.completed .step-number {
+    background: var(--success-color);
+    color: white;
+}
+
+.step-title {
+    font-weight: bold;
+    font-size: 16px;
+    flex: 1;
+}
+
+.step-status {
+    font-size: 13px;
+    color: var(--muted-color);
+}
+
+.step.completed .step-status {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.step-content {
+    margin-left: 40px;
+}
+
+.step-info {
+    color: var(--muted-color);
+    font-size: 14px;
+    margin: 0;
+}
+
+#selected-repeater {
+    background: var(--bg-color);
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* Measurement stats */
+.measurement-stats {
     background: var(--bg-color);
     padding: 12px;
     border-radius: 4px;
@@ -77,16 +164,29 @@
     margin-top: 15px;
 }
 
-.session-info div {
+.measurement-stats div {
     margin-bottom: 6px;
 }
 
-.session-info div:last-child {
+.measurement-stats div:last-child {
     margin-bottom: 0;
 }
 
-.session-info span {
+.measurement-stats span {
     font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Collection section styling */
+.collection-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid var(--border-color);
+}
+
+.collection-section h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
     color: var(--primary-color);
 }
 

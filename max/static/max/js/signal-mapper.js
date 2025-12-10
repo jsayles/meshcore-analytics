@@ -17,14 +17,16 @@ class SignalMapper {
         this.sessionId = this.generateUUID();
         this.targetNodeId = null;
         this.repeaters = [];
+        this.currentStep = 1;
+        this.locationShared = false;
     }
 
     /**
      * Initialize the application
      */
     async init() {
-        // Initialize Leaflet map
-        this.map = L.map('map').setView([37.7749, -122.4194], 13);
+        // Initialize Leaflet map - centered on Vancouver, BC
+        this.map = L.map('map').setView([49.2827, -123.1207], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -37,9 +39,6 @@ class SignalMapper {
         // Set up event handlers
         this.setupEventHandlers();
 
-        // Display session ID
-        document.getElementById('session-id').textContent = this.sessionId.substring(0, 8);
-
         // Check for pre-selected node from query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const preSelectedNodeId = urlParams.get('node');
@@ -47,11 +46,119 @@ class SignalMapper {
             this.targetNodeId = parseInt(preSelectedNodeId);
         }
 
-        // Show status message
-        this.showMessage('Ready to connect. Click "Connect" to start.', 'info');
+        // Load repeaters for dropdown
+        await this.loadRepeaters();
 
-        // Try to get user's location to center map
-        this.centerMapOnUser();
+        // Initialize step states
+        this.initializeSteps();
+
+        // Request location permission
+        this.requestLocation();
+    }
+
+    /**
+     * Initialize step states based on current progress
+     */
+    initializeSteps() {
+        // Hide collection section initially - only show when step 3 is complete
+        document.getElementById('collection-section').style.display = 'none';
+
+        // Step 1: Repeater selection
+        if (this.targetNodeId) {
+            // Show selected repeater name in the status
+            // ID is at feature.id, not feature.properties.id
+            const repeater = this.repeaters.find(r => Number(r.id) === Number(this.targetNodeId));
+
+            const repeaterName = repeater ? (repeater.properties.name || repeater.properties.mesh_identity) : 'Selected';
+
+            this.completeStep(1, repeaterName);
+            this.currentStep = 2;
+
+            // Hide the dropdown content completely
+            document.getElementById('content-repeater').style.display = 'none';
+            document.getElementById('content-repeater-selected').style.display = 'none';
+        } else {
+            this.setActiveStep(1);
+        }
+
+        this.updateStepDisplay();
+    }
+
+    /**
+     * Set a step as active
+     */
+    setActiveStep(stepNumber) {
+        document.querySelectorAll('.step').forEach(step => {
+            step.classList.remove('active');
+        });
+
+        const stepElement = document.querySelector(`[data-step="${stepNumber}"]`);
+        if (stepElement) {
+            stepElement.classList.add('active');
+        }
+
+        this.currentStep = stepNumber;
+    }
+
+    /**
+     * Mark a step as completed
+     */
+    completeStep(stepNumber, statusText) {
+        const stepElement = document.querySelector(`[data-step="${stepNumber}"]`);
+        const statusElement = document.getElementById(`status-${this.getStepName(stepNumber)}`);
+
+        if (stepElement) {
+            stepElement.classList.add('completed');
+            stepElement.classList.remove('active');
+        }
+
+        if (statusElement) {
+            statusElement.textContent = statusText;
+        }
+    }
+
+    /**
+     * Get step name from number
+     */
+    getStepName(stepNumber) {
+        const names = ['', 'repeater', 'location', 'radio', 'collect'];
+        return names[stepNumber];
+    }
+
+    /**
+     * Update step display
+     */
+    updateStepDisplay() {
+        this.setActiveStep(this.currentStep);
+    }
+
+    /**
+     * Request user location
+     */
+    requestLocation() {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.locationShared = true;
+                    this.completeStep(2, 'Enabled');
+                    this.map.setView(
+                        [position.coords.latitude, position.coords.longitude],
+                        15
+                    );
+
+                    if (this.currentStep === 2) {
+                        this.currentStep = 3;
+                        this.updateStepDisplay();
+                    }
+                },
+                (error) => {
+                    console.warn('Could not get user location:', error);
+                    document.getElementById('status-location').textContent = 'Permission needed';
+                }
+            );
+        } else {
+            document.getElementById('status-location').textContent = 'Not supported';
+        }
     }
 
     /**
@@ -61,12 +168,12 @@ class SignalMapper {
         // Pi Connection
         document.getElementById('btn-connect').addEventListener('click', () => this.connectToPi());
 
-        // Repeater selection
+        // Repeater selection - redirect to URL with node parameter
         document.getElementById('repeater-select').addEventListener('change', (e) => {
-            this.targetNodeId = parseInt(e.target.value);
-            if (this.targetNodeId) {
-                document.getElementById('collection-section').style.display = 'block';
-                document.getElementById('heatmap-section').style.display = 'block';
+            const nodeId = e.target.value;
+            if (nodeId && nodeId !== 'undefined' && nodeId !== '') {
+                // Redirect to same page with node parameter
+                window.location.href = `/mapper/?node=${nodeId}`;
             }
         });
 
@@ -99,10 +206,6 @@ class SignalMapper {
         // Continuous collection
         document.getElementById('btn-start-continuous').addEventListener('click', () => this.startContinuous());
         document.getElementById('btn-stop-continuous').addEventListener('click', () => this.stopContinuous());
-
-        // Heatmap controls
-        document.getElementById('btn-load-heatmap').addEventListener('click', () => this.loadHeatmap());
-        document.getElementById('btn-clear-heatmap').addEventListener('click', () => this.clearHeatmap());
     }
 
     /**
@@ -110,36 +213,37 @@ class SignalMapper {
      */
     async connectToPi() {
         const btn = document.getElementById('btn-connect');
-        const status = document.getElementById('connection-status');
+        const status = document.getElementById('status-radio');
 
         try {
             btn.disabled = true;
             btn.textContent = 'Connecting...';
-
-            // Set up connection state callback
-            this.wsConnection.onConnectionChange = (connected) => {
-                if (connected) {
-                    status.textContent = 'Connected';
-                    status.className = 'status connected';
-                } else {
-                    status.textContent = 'Disconnected';
-                    status.className = 'status disconnected';
-                }
-            };
+            status.textContent = 'Connecting...';
 
             // Connect via WebSocket
             await this.wsConnection.connect();
 
-            btn.textContent = 'Connected';
-            this.showMessage('Connected! GPS streaming started. Select a target repeater.', 'success');
+            // Remove the button and hide the step content
+            document.getElementById('content-radio').style.display = 'none';
+            this.showMessage('Connected! GPS streaming started.', 'success');
 
-            // Load repeaters
-            await this.loadRepeaters();
+            // Mark step complete
+            this.completeStep(3, 'Connected');
+
+            // Remove active state from all steps since setup is complete
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+
+            // Show collection section now that all steps are complete
+            document.getElementById('collection-section').style.display = 'block';
+
+            // Load existing heatmap data for this repeater
+            await this.loadAndDisplayHeatmap();
 
         } catch (error) {
             console.error('Connection failed:', error);
-            status.textContent = 'Connection Failed';
-            status.className = 'status disconnected';
+            status.textContent = 'Failed';
             btn.textContent = 'Retry Connection';
             btn.disabled = false;
 
@@ -161,7 +265,6 @@ class SignalMapper {
             if (features && features.length > 0) {
                 this.repeaters = features;
                 this.populateRepeaterDropdown();
-                document.getElementById('repeater-section').style.display = 'block';
             } else {
                 this.showMessage('No active repeaters found in database. Add some via admin first.', 'warning');
             }
@@ -182,21 +285,16 @@ class SignalMapper {
         this.repeaters.forEach(feature => {
             const props = feature.properties;
             const option = document.createElement('option');
-            option.value = props.id;
+            // ID is at feature.id, not feature.properties.id
+            option.value = String(feature.id);
             option.textContent = props.name || props.mesh_identity;
 
             // Pre-select if this is the target node
-            if (this.targetNodeId && props.id === this.targetNodeId) {
+            if (this.targetNodeId && feature.id === this.targetNodeId) {
                 option.selected = true;
             }
             select.appendChild(option);
         });
-
-        // If a node was pre-selected, show collection and heatmap sections
-        if (this.targetNodeId) {
-            document.getElementById('collection-section').style.display = 'block';
-            document.getElementById('heatmap-section').style.display = 'block';
-        }
     }
 
     /**
@@ -290,63 +388,28 @@ class SignalMapper {
         document.getElementById('measurement-count').textContent = data.count;
         document.getElementById('last-rssi').textContent = data.rssi;
         document.getElementById('last-snr').textContent = data.snr;
-        // GPS accuracy not returned in WebSocket architecture
-        // (GPS is streamed separately from measurements)
+
+        // Auto-refresh heatmap with new data
+        this.loadAndDisplayHeatmap();
     }
 
     /**
-     * Load and display heatmap
+     * Load and display heatmap automatically
      */
-    async loadHeatmap() {
+    async loadAndDisplayHeatmap() {
         if (!this.targetNodeId) {
-            this.showMessage('Please select a target repeater first', 'warning');
             return;
         }
 
         try {
-            const btn = document.getElementById('btn-load-heatmap');
-            btn.disabled = true;
-            btn.textContent = 'Loading...';
-
             await this.heatmapRenderer.loadData(this.targetNodeId);
             this.heatmapRenderer.render();
 
             const count = this.heatmapRenderer.measurements.length;
-            this.showMessage(`Heatmap loaded with ${count} measurements`, 'success');
+            console.log(`Heatmap updated with ${count} measurements`);
 
         } catch (error) {
             console.error('Failed to load heatmap:', error);
-            this.showMessage(`Failed to load heatmap: ${error.message}`, 'error');
-        } finally {
-            document.getElementById('btn-load-heatmap').disabled = false;
-            document.getElementById('btn-load-heatmap').textContent = 'Load Heatmap';
-        }
-    }
-
-    /**
-     * Clear heatmap
-     */
-    clearHeatmap() {
-        this.heatmapRenderer.clear();
-        this.showMessage('Heatmap cleared', 'info');
-    }
-
-    /**
-     * Center map on user's location
-     */
-    centerMapOnUser() {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    this.map.setView(
-                        [position.coords.latitude, position.coords.longitude],
-                        15
-                    );
-                },
-                (error) => {
-                    console.warn('Could not get user location:', error);
-                }
-            );
         }
     }
 
