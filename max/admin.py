@@ -13,14 +13,14 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Node)
 class NodeAdmin(GISModelAdmin):
-    list_display = ["name", "mesh_identity", "role", "owner", "is_active", "is_favourite", "last_seen"]
+    list_display = ["name", "mesh_identity", "role", "latitude", "longitude", "is_active", "is_favourite", "last_seen"]
     list_filter = ["role", "is_active", "is_favourite", "firmware_version"]
     search_fields = ["name", "mesh_identity", "public_key", "description"]
     readonly_fields = ["first_seen", "last_seen", "latitude", "longitude"]
     fieldsets = [
         ("Identity", {"fields": ["mesh_identity", "public_key", "firmware_version", "role"]}),
         ("Information", {"fields": ["name", "description", "owner"]}),
-        ("Location", {"fields": ["location", "latitude", "longitude", "altitude"], "classes": ["collapse"]}),
+        ("Location", {"fields": ["location", "latitude", "longitude", "altitude"]}),
         ("Status", {"fields": ["is_active", "is_favourite", "first_seen", "last_seen"]}),
     ]
 

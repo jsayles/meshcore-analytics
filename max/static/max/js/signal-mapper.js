@@ -148,8 +148,11 @@ class SignalMapper {
             const response = await fetch('/api/v1/nodes/?role=0&is_active=true');
             const data = await response.json();
 
-            if (data.features && data.features.length > 0) {
-                this.repeaters = data.features;
+            // API returns paginated results with structure: { count, results: { features: [...] } }
+            const features = data.results?.features || data.features;
+
+            if (features && features.length > 0) {
+                this.repeaters = features;
                 this.populateRepeaterDropdown();
                 document.getElementById('repeater-section').style.display = 'block';
             } else {

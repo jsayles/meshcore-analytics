@@ -5,10 +5,12 @@ Usage: python manage.py load_radio_data
 
 import asyncio
 from asgiref.sync import sync_to_async
+from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
-from max.models import Node
+from max.models import Node, Role
 
 try:
     from meshcore import MeshCore, SerialConnection
@@ -23,8 +25,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--port",
             type=str,
-            default="/dev/tty.usbmodem21401",
-            help="Serial port (default: /dev/tty.usbmodem21401)",
+            default=settings.MESHCORE_SERIAL_PORT,
+            help=f"Serial port (default: {settings.MESHCORE_SERIAL_PORT})",
         )
 
     def handle(self, *args, **options):
@@ -66,15 +68,34 @@ class Command(BaseCommand):
 
             mesh_identity = contact.get("mesh_identity", public_key[:16])
 
+            # Map firmware type to role: Client (1) stays Client, everything else becomes Repeater
+            firmware_type = contact.get("type", 0)
+            role = Role.CLIENT if firmware_type == 1 else Role.REPEATER
+
+            # Check if contact is marked as favourite (typically bit 0 of flags)
+            flags = contact.get("flags", 0)
+            is_favourite = bool(flags & 0x01)
+
+            # Prepare location data if available
+            defaults = {
+                "public_key": public_key,
+                "name": contact.get("adv_name", ""),
+                "role": role,
+                "is_favourite": is_favourite,
+                "last_seen": timezone.now(),
+            }
+
+            # Add location if advertised (non-zero lat/lon)
+            adv_lat = contact.get("adv_lat", 0)
+            adv_lon = contact.get("adv_lon", 0)
+            if adv_lat != 0 or adv_lon != 0:
+                defaults["location"] = Point(adv_lon, adv_lat, srid=4326)
+
             node, created = await sync_to_async(Node.objects.update_or_create)(
                 mesh_identity=mesh_identity,
-                defaults={
-                    "public_key": public_key,
-                    "name": contact.get("adv_name", ""),
-                    "role": contact.get("type", 0),
-                    "last_seen": timezone.now(),
-                },
+                defaults=defaults,
             )
 
             status = "Created" if created else "Updated"
-            self.stdout.write(f"  {status}: {node.name or mesh_identity}")
+            location_info = f" (lat: {adv_lat:.6f}, lon: {adv_lon:.6f})" if defaults.get("location") else ""
+            self.stdout.write(f"  {status}: {node.name or mesh_identity}{location_info}")

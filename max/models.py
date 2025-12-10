@@ -15,8 +15,6 @@ class User(AbstractUser):
 class Role(models.IntegerChoices):
     REPEATER = 0, "Repeater"
     CLIENT = 1, "Client"
-    GATEWAY = 2, "Gateway"
-    SENSOR = 3, "Sensor"
 
 
 class Node(models.Model):

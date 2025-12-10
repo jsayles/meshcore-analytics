@@ -197,11 +197,19 @@ uv sync
 
 **Note:** The `meshcore` library integration uses `radio.getStats()` to read signal data. Adjust [max/radio_interface.py:109](max/radio_interface.py:109) if your MeshCore library has a different API.
 
+## Related Projects
+
+### MeshCore MQTT Broker
+**Repository:** https://github.com/michaelhart/meshcore-mqtt-broker
+
+**Important Note:** The main developer (Tree) runs the main meshcore-analyzer website. This MQTT broker project may have overlapping functionality with our analytics platform. We should coordinate with them as there may be opportunities to merge or integrate our projects in the future.
+
 ## Next Steps
 
 - [ ] Fine-tune MeshCore radio API integration (verify getStats() method)
 - [ ] Build Repeater Monitor frontend dashboard
 - [ ] Deploy to Raspberry Pi with systemd services
 - [ ] Add advanced heatmap interpolation
+- [ ] Evaluate integration opportunities with meshcore-mqtt-broker
 
 See full roadmap in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
