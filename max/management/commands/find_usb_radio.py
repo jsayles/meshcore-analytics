@@ -3,41 +3,33 @@ Django management command to find connected MeshCore radios.
 
 Usage:
     python manage.py find_usb_radio
-    python manage.py find_usb_radio --test
-    python manage.py find_usb_radio --update-env
+    python manage.py find_usb_radio --save
 """
+from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
 try:
-    import serial.tools.list_ports
+    import serial.tools.list_ports # type: ignore
 
     SERIAL_AVAILABLE = True
 except ImportError:
     SERIAL_AVAILABLE = False
 
-try:
-    import meshcore
-
-    MESHCORE_AVAILABLE = True
-except ImportError:
-    MESHCORE_AVAILABLE = False
-
 
 class Command(BaseCommand):
-    help = "Find connected MeshCore radios and test connection"
+    help = "Find connected MeshCore radios"
 
     def add_arguments(self, parser):
-        parser.add_argument("--test", action="store_true", help="Test connection to found radios")
-        parser.add_argument("--update-env", action="store_true", help="Update .env file with found radio port")
+        parser.add_argument("--save", action="store_true", help="Save found radio port to .env file")
 
     def handle(self, *args, **options):
         if not SERIAL_AVAILABLE:
             self.stdout.write(self.style.ERROR("pyserial not installed. Install with: uv add pyserial"))
             return
 
-        self.stdout.write(self.style.SUCCESS("🔍 Searching for USB serial devices...\n"))
+        self.stdout.write(self.style.SUCCESS("\n🔍 Searching for USB serial devices...\n"))
 
         # List all serial ports
         ports = list(serial.tools.list_ports.comports())
@@ -60,18 +52,22 @@ class Command(BaseCommand):
             is_likely = self._is_likely_meshcore(port)
 
             marker = "✓" if is_likely else " "
-            style = self.style.SUCCESS if is_likely else self.style.WARNING
-
-            self.stdout.write(style(f"[{marker}] {i}. {port.device}"))
-            self.stdout.write(f"    Description: {port.description}")
-            if port.manufacturer:
-                self.stdout.write(f"    Manufacturer: {port.manufacturer}")
-            if port.serial_number:
-                self.stdout.write(f"    Serial: {port.serial_number}")
-            self.stdout.write("")
-
             if is_likely:
+                self.stdout.write(self.style.SUCCESS(f"   [{marker}] {port.device}"))
                 likely_radios.append(port)
+            else:
+                self.stdout.write(self.style.WARNING(f"   [{marker}] {port.device}"))
+
+            # Show description/manufacturer only if informative
+            info_parts = []
+            if port.manufacturer and port.manufacturer.lower() not in ["n/a", "unknown"]:
+                info_parts.append(port.manufacturer)
+            if port.description and port.description.lower() not in ["n/a", "unknown"]:
+                info_parts.append(port.description)
+
+            if info_parts:
+                self.stdout.write(f"       * {' - '.join(info_parts)}")
+
 
         # Suggest likely candidates
         if likely_radios:
@@ -81,27 +77,17 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING("\n⚠️  No obvious MeshCore radios found. Try testing each device manually."))
 
-        # Test connection if requested
-        if options["test"]:
-            self.stdout.write("\n" + "=" * 60)
-            self.stdout.write(self.style.SUCCESS("🧪 Testing connections...\n"))
-
-            test_ports = likely_radios if likely_radios else ports
-
-            for port in test_ports:
-                self.test_connection(port.device)
-
         # Show .env update instructions
         if likely_radios:
             primary = likely_radios[0]
             self.stdout.write("\n" + "=" * 60)
             self.stdout.write(self.style.SUCCESS("📝 To use this radio:\n"))
-            self.stdout.write(f"1. Update your .env file:")
+            self.stdout.write("1. Update your .env file:")
             self.stdout.write(f"   SERIAL_PORT={primary.device}\n")
-            self.stdout.write(f"2. Restart your server:")
-            self.stdout.write(f"   uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application")
+            self.stdout.write("2. Restart your server:")
+            self.stdout.write("   uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application")
 
-            if options["update_env"]:
+            if options["save"]:
                 self.update_env_file(primary.device)
 
     def _is_likely_meshcore(self, port):
@@ -119,60 +105,21 @@ class Command(BaseCommand):
             "meshcore" in desc,
             "meshcore" in manufacturer,
             "esp32" in desc,
+            "espressif" in manufacturer,  # Espressif makes ESP32 chips
             "cp210" in desc,  # Common USB-UART chip
             "ch340" in desc,  # Common USB-UART chip
             "ftdi" in desc,  # FTDI USB-UART
-            "/dev/tty.usbmodem" in device,  # Mac pattern
+            "usb jtag" in desc,  # ESP32 USB JTAG/serial debug unit
+            "/dev/cu.usbmodem" in device,  # Mac pattern (cu)
+            "/dev/tty.usbmodem" in device,  # Mac pattern (tty)
             "/dev/ttyacm" in device,  # Linux pattern
             "/dev/ttyusb" in device,  # Linux pattern
         ]
 
         return any(patterns)
 
-    def test_connection(self, port):
-        """Test connection to a specific port."""
-        self.stdout.write(f"\n🔌 Testing {port}...")
-
-        if not MESHCORE_AVAILABLE:
-            self.stdout.write(self.style.WARNING("   meshcore library not available, skipping connection test"))
-            return
-
-        try:
-            import serial
-
-            # Try to open the port
-            ser = serial.Serial(port, settings.MESHCORE_BAUD_RATE, timeout=2)
-
-            self.stdout.write(self.style.SUCCESS(f"   ✓ Port opened successfully at {settings.MESHCORE_BAUD_RATE} baud"))
-
-            # Try to initialize MeshCore radio
-            try:
-                radio = meshcore.Radio(ser)
-                self.stdout.write(self.style.SUCCESS("   ✓ MeshCore radio initialized"))
-
-                # Try to get stats
-                try:
-                    stats = radio.getStats()
-                    self.stdout.write(self.style.SUCCESS("   ✓ Successfully read stats from radio"))
-                    if hasattr(stats, "last_rssi"):
-                        self.stdout.write(f"      RSSI: {stats.last_rssi} dBm")
-                    if hasattr(stats, "last_snr"):
-                        self.stdout.write(f"      SNR: {stats.last_snr} dB")
-                except Exception as e:
-                    self.stdout.write(self.style.WARNING(f"   ⚠ Could not read stats: {e}"))
-
-                ser.close()
-
-            except Exception as e:
-                ser.close()
-                self.stdout.write(self.style.ERROR(f"   ✗ Not a MeshCore radio: {e}"))
-
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"   ✗ Error: {e}"))
-
     def update_env_file(self, port):
         """Update .env file with the found port."""
-        from pathlib import Path
 
         env_path = Path(settings.BASE_DIR) / ".env"
 
