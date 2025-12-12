@@ -6,7 +6,7 @@ from django.core.asgi import get_asgi_application
 from django.urls import path
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "max.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "metro.settings")
 
 
 # Initialize Django ASGI application early to ensure the AppRegistry
@@ -14,7 +14,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "max.settings")
 django_asgi_app = get_asgi_application()
 
 # Import after Django initialization to avoid AppRegistryNotReady errors
-from max.consumers import SignalStreamConsumer  # noqa: E402
+from metro.consumers import SignalStreamConsumer  # noqa: E402
 
 
 application = ProtocolTypeRouter(

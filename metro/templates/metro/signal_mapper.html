@@ -1,10 +1,10 @@
-{% extends "max/base.html" %}
+{% extends "metro/base.html" %}
 {% load static %}
 
 {% block title %}MeshCore Signal Mapper{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'max/css/signal-mapper.css' %}">
+<link rel="stylesheet" href="{% static 'metro/css/signal-mapper.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -126,12 +126,12 @@
 
 {% block scripts %}
 <!-- Load modules as type=module for modern browsers -->
-<script type="module" src="{% static 'max/js/ws-connection.js' %}"></script>
-<script type="module" src="{% static 'max/js/measurement-collector.js' %}"></script>
-<script type="module" src="{% static 'max/js/heatmap-renderer.js' %}"></script>
-<script type="module" src="{% static 'max/js/signal-mapper.js' %}"></script>
+<script type="module" src="{% static 'metro/js/ws-connection.js' %}"></script>
+<script type="module" src="{% static 'metro/js/measurement-collector.js' %}"></script>
+<script type="module" src="{% static 'metro/js/heatmap-renderer.js' %}"></script>
+<script type="module" src="{% static 'metro/js/signal-mapper.js' %}"></script>
 <script type="module">
-    import { SignalMapper } from "{% static 'max/js/signal-mapper.js' %}";
+    import { SignalMapper } from "{% static 'metro/js/signal-mapper.js' %}";
 
     document.addEventListener('DOMContentLoaded', () => {
         const app = new SignalMapper();

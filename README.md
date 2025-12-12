@@ -1,4 +1,6 @@
-# MeshCore Analytics
+# MeshCore METRO
+
+## Mesh Telemetry & Radio Ops
 
 An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks.
 
@@ -24,8 +26,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full architecture details.
 uv sync
 
 # 2. Create database
-createdb maxdb
-psql maxdb -c "CREATE EXTENSION postgis;"
+createdb metrodb
+psql metrodb -c "CREATE EXTENSION postgis;"
 
 # 3. Create .env file
 cp .env.example .env
@@ -37,7 +39,7 @@ uv run manage.py migrate
 uv run python manage.py find_usb_radio --save
 
 # 6. Start server
-uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application
+uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 ```
 
 **Browser:**
@@ -50,7 +52,7 @@ uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application
 
 ```bash
 # Run with Channels/WebSocket support (REQUIRED for Signal Mapper)
-uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application
+uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 
 # Find connected USB radios
 uv run python manage.py find_usb_radio
@@ -62,9 +64,6 @@ uv run python manage.py load_radio_data
 # Run migrations
 uv run python manage.py migrate
 
-# Create superuser
-uv run python manage.py createsuperuser
-
 # Run tests
 uv run python manage.py test --parallel auto
 
@@ -74,38 +73,12 @@ uv lock --upgrade
 uv sync
 ```
 
-## Project Structure
-
-```
-├── max/                    # Main Django app
-│   ├── models.py           # Node, SignalMeasurement, RepeaterStats
-│   ├── consumers.py        # WebSocket consumer (GPS/signal)
-│   ├── radio_interface.py  # USB radio interface
-│   ├── static/max/js/
-│   │   ├── pi-connection.js       # WebSocket client
-│   │   ├── measurement-collector.js
-│   │   ├── heatmap-renderer.js
-│   │   └── signal-mapper.js
-│   └── templates/
-├── api/                    # REST API
-├── docs/
-│   └── ARCHITECTURE.md     # Full system docs
-└── pyproject.toml
-```
-
-## API Endpoints
-
-- `GET /api/v1/nodes/` - List active nodes
-- `GET/POST /api/v1/measurements/` - Signal measurements
-- `WS /ws/signal/` - WebSocket for GPS/signal streaming
-
-
 ## Related Projects
 
 ### MeshCore MQTT Broker
 **Repository:** https://github.com/michaelhart/meshcore-mqtt-broker
 
-**Important Note:** The main developer (Tree) runs the main meshcore-analyzer website. This MQTT broker project may have overlapping functionality with our analytics platform. We should coordinate with them as there may be opportunities to merge or integrate our projects in the future.
+**Important Note:** The main developer (Tree) runs the main meshcore-analyzer website. This MQTT broker project may have overlapping functionality with our platform. We should coordinate with them as there may be opportunities to merge or integrate our projects in the future.
 
 ## Next Steps
 

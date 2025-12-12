@@ -1,10 +1,10 @@
-{% extends "max/base.html" %}
+{% extends "metro/base.html" %}
 {% load static %}
 
 {% block title %}{{ node.name|default:"Node Details" }} - MeshCore{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'max/css/node-detail.css' %}">
+<link rel="stylesheet" href="{% static 'metro/css/node-detail.css' %}">
 {% endblock %}
 
 {% block content %}

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
-from max.models import Node, MappingSession, Trace, Role
+from metro.models import Node, MappingSession, Trace, Role
 from .serializers import NodeSerializer, MappingSessionSerializer, TraceSerializer
 
 

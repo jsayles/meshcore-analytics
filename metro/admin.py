@@ -1,14 +1,6 @@
 from django.contrib import admin
 from django.contrib.gis.admin import GISModelAdmin
-from .models import Node, RepeaterStats, NeighbourInfo, MappingSession, Trace, User
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ["username", "email", "first_name", "last_name", "is_staff", "is_active"]
-    list_filter = ["is_staff", "is_active", "date_joined"]
-    search_fields = ["username", "email", "first_name", "last_name"]
-    ordering = ["-date_joined"]
+from .models import Node, RepeaterStats, NeighbourInfo, MappingSession, Trace
 
 
 @admin.register(Node)
@@ -19,7 +11,7 @@ class NodeAdmin(GISModelAdmin):
     readonly_fields = ["first_seen", "last_seen", "latitude", "longitude"]
     fieldsets = [
         ("Identity", {"fields": ["mesh_identity", "public_key", "firmware_version", "role"]}),
-        ("Information", {"fields": ["name", "description", "owner"]}),
+        ("Information", {"fields": ["name", "description"]}),
         ("Location", {"fields": ["location", "latitude", "longitude", "altitude", "estimated_range"]}),
         ("Status", {"fields": ["is_active", "first_seen", "last_seen"]}),
     ]
@@ -72,13 +64,13 @@ class NeighbourInfoAdmin(admin.ModelAdmin):
 
 @admin.register(MappingSession)
 class MappingSessionAdmin(admin.ModelAdmin):
-    list_display = ["user", "target_node", "start_time", "end_time", "is_active"]
-    list_filter = ["start_time", "end_time", "user", "target_node"]
-    search_fields = ["user__username", "target_node__name", "target_node__mesh_identity", "notes"]
+    list_display = ["target_node", "start_time", "end_time", "is_active"]
+    list_filter = ["start_time", "end_time", "target_node"]
+    search_fields = ["target_node__name", "target_node__mesh_identity", "notes"]
     readonly_fields = ["start_time", "is_active", "duration"]
     date_hierarchy = "start_time"
     fieldsets = [
-        ("Session Info", {"fields": ["user", "target_node", "notes"]}),
+        ("Session Info", {"fields": ["target_node", "notes"]}),
         ("Timing", {"fields": ["start_time", "end_time", "is_active", "duration"]}),
     ]
 
@@ -94,7 +86,7 @@ class TraceAdmin(GISModelAdmin):
         "gps_accuracy",
     ]
     list_filter = ["timestamp", "session__target_node", "trace_success", "session"]
-    search_fields = ["session__target_node__name", "session__target_node__mesh_identity", "session__user__username"]
+    search_fields = ["session__target_node__name", "session__target_node__mesh_identity"]
     readonly_fields = ["timestamp", "target_node"]
     date_hierarchy = "timestamp"
     fieldsets = [

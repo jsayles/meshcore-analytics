@@ -7,10 +7,10 @@
     <title>{% block title %}Signal Mapper{% endblock %}</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="{% static 'max/vendor/leaflet/leaflet.css' %}">
+    <link rel="stylesheet" href="{% static 'metro/vendor/leaflet/leaflet.css' %}">
 
     <!-- Common CSS -->
-    <link rel="stylesheet" href="{% static 'max/css/max.css' %}">
+    <link rel="stylesheet" href="{% static 'metro/css/metro.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -18,8 +18,8 @@
     {% block content %}{% endblock %}
 
     <!-- Leaflet JS -->
-    <script src="{% static 'max/vendor/leaflet/leaflet.js' %}"></script>
-    <script src="{% static 'max/vendor/leaflet-heat.js' %}"></script>
+    <script src="{% static 'metro/vendor/leaflet/leaflet.js' %}"></script>
+    <script src="{% static 'metro/vendor/leaflet-heat.js' %}"></script>
 
     {% block scripts %}{% endblock %}
 </body>

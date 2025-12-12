@@ -17,7 +17,7 @@ from channels.db import database_sync_to_async
 
 from django.contrib.gis.geos import Point
 
-from max.models import MappingSession, Trace, Node
+from metro.models import MappingSession, Trace, Node
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         Returns:
             dict with rssi and snr, or None if unavailable
         """
-        from max.radio_interface import get_radio_interface
+        from metro.radio_interface import get_radio_interface
 
         try:
             # Get target node from database

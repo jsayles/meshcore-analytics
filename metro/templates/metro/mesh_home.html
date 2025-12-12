@@ -1,10 +1,10 @@
-{% extends "max/base.html" %}
+{% extends "metro/base.html" %}
 {% load static %}
 
 {% block title %}MeshCore Network Overview{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'max/css/mesh-home.css' %}">
+<link rel="stylesheet" href="{% static 'metro/css/mesh-home.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -24,7 +24,7 @@
 
         <!-- Top 10 Current Repeaters List -->
         <div id="repeater-list-section">
-            <h3>Top Current Repeaters</h3>
+            <h3>Repeaters</h3>
             <ul id="repeater-list" class="repeater-list">
                 <!-- Populated by JavaScript -->
             </ul>
@@ -53,5 +53,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="{% static 'max/js/mesh-home.js' %}"></script>
+<script type="module" src="{% static 'metro/js/mesh-home.js' %}"></script>
 {% endblock %}

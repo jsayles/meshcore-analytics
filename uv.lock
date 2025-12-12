@@ -334,7 +334,21 @@ wheels = [
 ]
 
 [[package]]
-name = "max"
+name = "meshcore"
+version = "2.2.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "bleak" },
+    { name = "pycayennelpp" },
+    { name = "pyserial-asyncio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/37/ffc4b990e0669ba84d04c6dcd69a0977cfc5692af8cb2a332abea41f39f4/meshcore-2.2.3.tar.gz", hash = "sha256:96631f94096b3677ec735d09dc2071a2bf5fb472b5d1b5b21936e301226ff36b", size = 50637, upload-time = "2025-12-07T16:41:58.155Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/11/d6a49dc0828ff23ce85177e180d5df0a7b88f9547c32f346711bb465d017/meshcore-2.2.3-py3-none-any.whl", hash = "sha256:827dfcf4a7b2f19537265573f5514333027de1d621b56bfab985e4b9e5d2f776", size = 43694, upload-time = "2025-12-07T16:41:56.727Z" },
+]
+
+[[package]]
+name = "metro"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -375,20 +389,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = "~=0.14" }]
-
-[[package]]
-name = "meshcore"
-version = "2.2.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "bleak" },
-    { name = "pycayennelpp" },
-    { name = "pyserial-asyncio" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/37/ffc4b990e0669ba84d04c6dcd69a0977cfc5692af8cb2a332abea41f39f4/meshcore-2.2.3.tar.gz", hash = "sha256:96631f94096b3677ec735d09dc2071a2bf5fb472b5d1b5b21936e301226ff36b", size = 50637, upload-time = "2025-12-07T16:41:58.155Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/11/d6a49dc0828ff23ce85177e180d5df0a7b88f9547c32f346711bb465d017/meshcore-2.2.3-py3-none-any.whl", hash = "sha256:827dfcf4a7b2f19537265573f5514333027de1d621b56bfab985e4b9e5d2f776", size = 43694, upload-time = "2025-12-07T16:41:56.727Z" },
-]
 
 [[package]]
 name = "msgpack"

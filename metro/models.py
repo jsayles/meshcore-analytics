@@ -1,16 +1,6 @@
-from django.contrib.auth.models import AbstractUser
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.urls import reverse
-
-
-class User(AbstractUser):
-    class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
-
-    def __str__(self):
-        return self.username
 
 
 class Role(models.IntegerChoices):
@@ -48,7 +38,6 @@ class Node(models.Model):
     )
 
     # Administrative fields
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="nodes", null=True, blank=True)
     is_active = models.BooleanField(default=True)
     first_seen = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
@@ -146,7 +135,6 @@ class MappingSession(models.Model):
     Sessions must be explicitly started and ended.
     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     target_node = models.ForeignKey(Node, on_delete=models.CASCADE)
     start_time = models.DateTimeField(auto_now_add=True, db_index=True)
     end_time = models.DateTimeField(null=True, blank=True)
@@ -157,13 +145,12 @@ class MappingSession(models.Model):
         verbose_name_plural = "Mapping Sessions"
         ordering = ["-start_time"]
         indexes = [
-            models.Index(fields=["user", "-start_time"]),
             models.Index(fields=["target_node", "-start_time"]),
         ]
 
     def __str__(self):
         status = "active" if self.end_time is None else "completed"
-        return f"{self.user} mapping {self.target_node} ({status}) - {self.start_time}"
+        return f"Mapping {self.target_node} ({status}) - {self.start_time}"
 
     @property
     def is_active(self):

@@ -1,6 +1,6 @@
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
-from max.models import Node, MappingSession, Trace, Role
+from metro.models import Node, MappingSession, Trace, Role
 
 
 class NodeSerializer(GeoFeatureModelSerializer):

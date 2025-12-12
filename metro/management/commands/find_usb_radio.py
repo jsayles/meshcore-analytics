@@ -85,7 +85,7 @@ class Command(BaseCommand):
             self.stdout.write("1. Update your .env file:")
             self.stdout.write(f"   SERIAL_PORT={primary.device}\n")
             self.stdout.write("2. Restart your server:")
-            self.stdout.write("   uv run daphne -b 0.0.0.0 -p 8000 max.asgi:application")
+            self.stdout.write("   uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application")
 
             if options["save"]:
                 self.update_env_file(primary.device)

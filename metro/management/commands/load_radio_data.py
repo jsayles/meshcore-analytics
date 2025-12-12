@@ -12,7 +12,7 @@ from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from max.models import Node, Role
+from metro.models import Node, Role
 
 try:
     from meshcore import MeshCore, SerialConnection
