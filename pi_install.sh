@@ -81,8 +81,8 @@ fi
 
 echo "   Writing .env file..."
 cat > .env << EOF
-# Database (using peer authentication - no password needed for local user)
-DATABASE_URL=postgresql://$USER@localhost:5432/metrodb
+# Database (using peer authentication via Unix socket - no password needed)
+DATABASE_URL=postgresql://$USER@/metrodb
 
 # Django
 SECRET_KEY=$SECRET_KEY
@@ -95,7 +95,7 @@ EOF
 
 echo ""
 echo "Generated .env file with DATABASE_URL:"
-echo "  postgresql://$USER@localhost:5432/metrodb"
+echo "  postgresql://$USER@/metrodb (Unix socket)"
 echo ""
 
 # Verify .env file was created
