@@ -11,10 +11,11 @@ Architecture:
 
 import json
 import logging
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
+
 from django.contrib.gis.geos import Point
-from asgiref.sync import sync_to_async
 
 from max.models import SignalMeasurement, Node
 
@@ -234,7 +235,8 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
             return measurement.id
 
         except Node.DoesNotExist:
-            raise ValueError(f"Target node {target_node_id} not found")
+            msg = f"Target node {target_node_id} not found"
+            raise ValueError(msg)
         except Exception as e:
             logger.error(f"Database error saving measurement: {e}")
             raise

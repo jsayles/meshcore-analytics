@@ -5,13 +5,14 @@ Usage:
     python manage.py find_usb_radio
     python manage.py find_usb_radio --save
 """
+
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
 try:
-    import serial.tools.list_ports # type: ignore
+    import serial.tools.list_ports  # type: ignore
 
     SERIAL_AVAILABLE = True
 except ImportError:
@@ -67,7 +68,6 @@ class Command(BaseCommand):
 
             if info_parts:
                 self.stdout.write(f"       * {' - '.join(info_parts)}")
-
 
         # Suggest likely candidates
         if likely_radios:
@@ -126,7 +126,7 @@ class Command(BaseCommand):
         try:
             # Read existing .env
             if env_path.exists():
-                with open(env_path, "r") as f:
+                with open(env_path) as f:
                     lines = f.readlines()
 
                 # Update SERIAL_PORT line
