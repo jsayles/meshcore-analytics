@@ -137,6 +137,17 @@
     font-weight: bold;
 }
 
+.permission-link {
+    color: var(--primary-color);
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.permission-link:hover {
+    color: #0056b3;
+}
+
 .step-content {
     margin-left: 40px;
 }

@@ -58,6 +58,18 @@ class SignalMapper {
     }
 
     /**
+     * Automatically attempt to connect to WebSocket
+     */
+    async autoConnectToWS() {
+        try {
+            await this.connectToWS();
+        } catch (error) {
+            // Silent fail - user can manually retry with the button
+            console.log('Auto-connect failed, user can manually connect');
+        }
+    }
+
+    /**
      * Initialize step states based on current progress
      */
     initializeSteps() {
@@ -151,11 +163,16 @@ class SignalMapper {
                     if (this.currentStep === 2) {
                         this.currentStep = 3;
                         this.updateStepDisplay();
+
+                        // Auto-connect to radio now that location is granted
+                        if (this.targetNodeId) {
+                            this.autoConnectToWS();
+                        }
                     }
                 },
                 (error) => {
                     console.warn('Could not get user location:', error);
-                    document.getElementById('status-location').textContent = 'Permission needed';
+                    this.showLocationPermissionLink();
                 }
             );
         } else {
@@ -164,11 +181,32 @@ class SignalMapper {
     }
 
     /**
+     * Show clickable link to retry location permission
+     */
+    showLocationPermissionLink() {
+        const statusElement = document.getElementById('status-location');
+        const link = document.createElement('a');
+        link.href = '#';
+        link.className = 'permission-link';
+        link.textContent = 'Permission needed';
+
+        link.onclick = (e) => {
+            e.preventDefault();
+            statusElement.textContent = 'Requesting...';
+            this.requestLocation();
+            return false;
+        };
+
+        statusElement.textContent = '';
+        statusElement.appendChild(link);
+    }
+
+    /**
      * Setup UI event handlers
      */
     setupEventHandlers() {
-        // Pi Connection
-        document.getElementById('btn-connect').addEventListener('click', () => this.connectToPi());
+        // WebSocket Connection
+        document.getElementById('btn-connect').addEventListener('click', () => this.connectToWS());
 
         // Session management
         document.getElementById('btn-start-session').addEventListener('click', () => this.startSession());
@@ -215,9 +253,9 @@ class SignalMapper {
     }
 
     /**
-     * Connect to Pi via WebSocket
+     * Connect via WebSocket
      */
-    async connectToPi() {
+    async connectToWS() {
         const btn = document.getElementById('btn-connect');
         const status = document.getElementById('status-radio');
 
@@ -280,7 +318,6 @@ class SignalMapper {
                     'X-CSRFToken': this.getCSRFToken()
                 },
                 body: JSON.stringify({
-                    user: 1, // TODO: Get actual user ID from authentication
                     target_node: this.targetNodeId,
                     notes: ''
                 })

@@ -28,7 +28,6 @@ class MappingSessionSerializer(serializers.ModelSerializer):
         model = MappingSession
         fields = [
             "id",
-            "user",
             "target_node",
             "start_time",
             "end_time",
