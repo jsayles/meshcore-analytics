@@ -12,14 +12,36 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full architecture details.
 
 ## Quick Start
 
-### Prerequisites
+### Raspberry Pi Installation
+
+For production deployment on a Raspberry Pi:
+
+```bash
+# Clone the repository
+git clone https://github.com/jsayles/meshcore-metro.git
+cd meshcore-metro
+
+# Run the installation script
+bin/pi_install.sh
+
+# After installation, source ~/.bashrc to update PATH
+source ~/.bashrc
+
+# Load radio data
+uv run python manage.py load_radio_data
+
+# Start the server
+bin/start_server.sh
+```
+
+Visit: https://metro.local:8443/ (accept the self-signed certificate warning)
+
+### Development Setup (Mac/Linux)
 
 - Python 3.14+
 - PostgreSQL with PostGIS extension
 - Redis server (for WebSocket channels)
-- MeshCore radio connected as USB companionkjjk
-
-### Setup
+- MeshCore radio connected as USB companion
 
 ```bash
 # 1. Install dependencies
@@ -38,7 +60,7 @@ uv run manage.py migrate
 # 5. Set up your USB Companion
 uv run python manage.py find_usb_radio --save
 
-# 6. Start server
+# 6. Start server (localhost uses HTTP)
 uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 ```
 
