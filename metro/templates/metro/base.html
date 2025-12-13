@@ -12,9 +12,43 @@
     <!-- Common CSS -->
     <link rel="stylesheet" href="{% static 'metro/css/metro.css' %}">
 
+    <style>
+        .navbar {
+            background: #2c3e50;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .navbar a:hover {
+            background: #34495e;
+        }
+        .navbar a.active {
+            background: #3498db;
+        }
+        .navbar .gear-icon {
+            margin-left: auto;
+            font-size: 20px;
+        }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="{% url 'home' %}" {% if request.path == '/' %}class="active"{% endif %}>Home</a>
+        <a href="{% url 'signal_mapper' %}" {% if 'mapper' in request.path %}class="active"{% endif %}>Signal Mapper</a>
+        <a href="{% url 'mesh_config' %}" class="gear-icon" title="Configuration" {% if 'config' in request.path %}style="background: #3498db;"{% endif %}>⚙️</a>
+    </nav>
+
     {% block content %}{% endblock %}
 
     <!-- Leaflet JS -->

@@ -1,0 +1,78 @@
+{% extends "metro/base.html" %}
+{% load static %}
+
+{% block title %}Mesh Configuration{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'metro/css/mesh-config.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="app">
+    <!-- Top Section: My Repeaters -->
+    <div id="my-repeaters-section" class="section">
+        <h1>My Repeaters</h1>
+        <div id="my-repeaters-list">
+            <div class="empty-state">No repeaters selected. Add some from the list below.</div>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Add Repeaters -->
+    <div id="add-repeaters-section" class="section">
+        <h1>Add Repeaters</h1>
+
+        <!-- Search and Filter Controls -->
+        <div id="search-controls">
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search by name or mesh ID..."
+                class="search-input"
+            />
+        </div>
+
+        <!-- Discovered Repeaters Table -->
+        <div id="discovered-repeaters-container">
+            <table id="discovered-repeaters-table" class="repeaters-table">
+                <thead>
+                    <tr>
+                        <th>Star</th>
+                        <th>Name</th>
+                        <th>Mesh ID</th>
+                        <th>SNR</th>
+                        <th>RSSI</th>
+                        <th>Hops</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="discovered-repeaters-body">
+                    <tr><td colspan="7" class="empty-state">Click "Discover Repeaters" to find available nodes</td></tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination Controls -->
+            <div id="pagination-controls" class="pagination">
+                <button id="prev-page" class="btn btn-sm">Previous</button>
+                <span id="page-info">Page 1</span>
+                <button id="next-page" class="btn btn-sm">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+    import { MeshConfig } from "{% static 'metro/js/mesh-config.js' %}";
+
+    // Only initialize once
+    if (!window.meshConfigInitialized) {
+        window.meshConfigInitialized = true;
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new MeshConfig();
+            window.meshConfig = app;
+            app.init();
+        });
+    }
+</script>
+{% endblock %}

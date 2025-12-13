@@ -1,0 +1,265 @@
+/* Mesh Configuration Page Styles */
+
+#app {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Section Styles */
+.section {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.section h1 {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    color: #333;
+}
+
+/* My Repeaters Section */
+#my-repeaters-list {
+    min-height: 100px;
+}
+
+#my-repeaters-list .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-style: italic;
+}
+
+#my-repeaters-list .repeater-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+#my-repeaters-list .repeater-item:hover {
+    background: #f9f9f9;
+}
+
+#my-repeaters-list .repeater-item .name {
+    flex: 2;
+    font-weight: bold;
+    color: #333;
+}
+
+#my-repeaters-list .repeater-item .mesh-id {
+    flex: 2;
+    font-family: monospace;
+    color: #666;
+    font-size: 14px;
+}
+
+#my-repeaters-list .repeater-item .snr,
+#my-repeaters-list .repeater-item .rssi,
+#my-repeaters-list .repeater-item .last-seen {
+    flex: 1;
+    color: #666;
+    font-size: 14px;
+}
+
+#my-repeaters-list .repeater-item .remove-btn {
+    margin-left: auto;
+}
+
+/* Discovery Status Bar */
+#discovery-status {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+#discovery-status.error {
+    background: #ffebee;
+    border-color: #ef5350;
+}
+
+#discovery-status.success {
+    background: #e8f5e9;
+    border-color: #66bb6a;
+}
+
+#status-message {
+    flex: 1;
+    color: #333;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #2196f3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner.hidden {
+    display: none;
+}
+
+/* Search Controls */
+#search-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2196f3;
+}
+
+/* Repeaters Table */
+.repeaters-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.repeaters-table thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+}
+
+.repeaters-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.repeaters-table tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+.repeaters-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.repeaters-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #666;
+}
+
+.repeaters-table .name-cell {
+    font-weight: 500;
+    color: #333;
+}
+
+.repeaters-table .mesh-id-cell {
+    font-family: monospace;
+    font-size: 13px;
+}
+
+/* Star Icon */
+.star-icon {
+    cursor: pointer;
+    font-size: 20px;
+    color: #ddd;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.star-icon:hover {
+    color: #ffc107;
+}
+
+.star-icon.favorited {
+    color: #ffc107;
+}
+
+/* Buttons */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: #2196f3;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
+}
+
+.btn-primary:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #757575;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #616161;
+}
+
+.btn-danger {
+    background: #f44336;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 20px 0;
+}
+
+#page-info {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-size: 16px;
+}
