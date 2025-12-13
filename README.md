@@ -4,9 +4,10 @@
 
 An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks.
 
-**Two complementary features:**
-1. **Repeater Monitor** - Real-time health monitoring and telemetry tracking
-2. **Signal Mapper** - Field survey tool for signal coverage heatmaps
+**Three complementary features:**
+1. **Mesh Configuration** - Discover and manage repeater contacts from your radio
+2. **Repeater Monitor** - Real-time health monitoring and telemetry tracking
+3. **Signal Mapper** - Field survey tool for signal coverage heatmaps
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full architecture details.
 
@@ -26,9 +27,6 @@ bin/pi_install.sh
 
 # After installation, source ~/.bashrc to update PATH
 source ~/.bashrc
-
-# Load radio data
-uv run python manage.py load_radio_data
 
 # Start the server
 bin/start_server.sh
@@ -90,7 +88,7 @@ uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 uv run python manage.py find_usb_radio
 uv run python manage.py find_usb_radio --save
 
-# Load contacts from USB radio
+# Update repeater telemetry
 uv run python manage.py load_radio_data
 
 # Run migrations

@@ -2,16 +2,51 @@
 
 ## Overview
 
-An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks. The app runs on a Raspberry Pi and provides two complementary features:
+An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks. The app runs on a Raspberry Pi and provides three complementary features:
 
-1. **Repeater Monitor** - Real-time health monitoring and telemetry tracking of mesh network repeater nodes
-2. **Signal Mapper** - Field survey tool for collecting and visualizing signal coverage heatmaps
+1. **Mesh Configuration** - Discover and manage repeater contacts from your radio
+2. **Repeater Monitor** - Real-time health monitoring and telemetry tracking of mesh network repeater nodes
+3. **Signal Mapper** - Field survey tool for collecting and visualizing signal coverage heatmaps
 
 The application is designed to run on a Raspberry Pi carried during field operations, combining USB-connected radio telemetry with phone-based GPS for comprehensive network analysis.
 
 ## Product Features
 
-### Feature 1: Repeater Monitor
+### Feature 1: Mesh Configuration
+
+**Purpose:** Discover and manage which repeater contacts are tracked in the local database.
+
+**Capabilities:**
+- Auto-discover repeater contacts from connected radio on page load
+- View "My Repeaters" (nodes already in database)
+- Browse "Add Repeaters" list (discovered nodes not yet in database)
+- Add repeaters to database with single click
+- Remove repeaters from database
+- Search/filter discovered repeaters
+- Pagination for large contact lists (50 per page)
+- Client-side favorites/starring for sorting (transient, not saved)
+
+**Data Sources:**
+- USB-connected MeshCore radio contacts via `mc.ensure_contacts()`
+- Filters to show only repeaters (type=2) from radio
+- API filters out nodes already in database
+
+**Current Status:**
+- ✅ Frontend UI complete with two-section layout
+- ✅ REST API endpoints functional (discover, add, delete)
+- ✅ Auto-redirect from home if no repeaters configured
+- ✅ Navbar with gear icon for configuration access
+- ✅ Search and pagination implemented
+
+**Workflow:**
+1. First-time users redirected to `/config/` automatically
+2. Page loads existing repeaters from database (top section)
+3. Auto-discovers available repeaters from radio (bottom section)
+4. User clicks star icon and "Add to Mesh" to add repeaters
+5. Remove button available for nodes in database
+6. Run `load_radio_data` command to update telemetry for tracked nodes
+
+### Feature 2: Repeater Monitor
 
 **Purpose:** Monitor the health, performance, and connectivity of MeshCore repeater nodes in real-time.
 
@@ -33,7 +68,7 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - Django admin interface functional
 - Frontend dashboard not yet implemented
 
-### Feature 2: Signal Mapper
+### Feature 3: Signal Mapper
 
 **Purpose:** Create signal coverage heatmaps for specific repeater nodes during field surveys.
 
@@ -63,8 +98,9 @@ The application is designed to run on a Raspberry Pi carried during field operat
 
 ### Feature Integration
 
-Both features share:
-- **Node Registry** - Central database of all mesh network devices
+All features share:
+- **Node Registry** - Central database of mesh network devices
+- **Radio Interface** - USB serial connection to MeshCore radio
 - **Spatial Database** - PostGIS for location-aware queries
 - **User Management** - Unified authentication and admin interface
 - **REST API** - Common API structure for data access
@@ -139,10 +175,11 @@ Both features share:
    - Extracts battery voltage, signal metrics, packet counts, air time
    - Stores `RepeaterStats` records in database with timestamp
 
-2. **Node Discovery** (Radio → Pi)
-   - Management command loads contact list from radio
-   - Creates/updates `Node` records with mesh_identity, public_key, role
-   - Updates last_seen timestamps
+2. **Node Discovery** (Radio → Pi → Database)
+   - Mesh Configuration UI discovers contacts from radio via API
+   - User manually selects which repeaters to add to database
+   - `load_radio_data` command updates existing nodes only (does not add new ones)
+   - Updates name, location, role, last_seen for tracked nodes
 
 3. **Neighbor Mapping** (Radio → Pi)
    - Reads which nodes each repeater can hear
@@ -271,15 +308,20 @@ Both features share:
 
 ### MeshCore Integration
 
+**Radio Contact Types**
+- Type 1: Client (companion radio/phone app)
+- Type 2: Repeater (infrastructure nodes)
+- Type 3: Room Server (BBS/message board nodes)
+
 **Current Implementation**
-- Django management command: `python manage.py load_radio_data`
-- Reads contacts from USB radio into Node database
-- Uses `meshcore` Python library for serial communication
+- Mesh Configuration page: Discover and add repeaters via web UI at `/config/`
+- Management command: `python manage.py load_radio_data` - Updates existing nodes only
+- Uses `meshcore` Python library (v2.2.3) for serial communication
+- Radio accessed via `/dev/cu.usbmodem*` or `/dev/ttyACM0`
 
 **Planned Implementation**
 - Background systemd service for continuous telemetry collection
 - Real-time signal data streaming via WebSocket
-- Automatic node discovery and tracking
 - Configurable polling intervals
 
 ## Network Protocols
@@ -355,12 +397,16 @@ Both features share:
 
 ### URL Routing
 ```
-/                          → Mesh network home (map overview)
+/                          → Mesh network home (redirects to /config/ if no repeaters)
+/config/                   → Mesh Configuration (discover and manage repeaters)
 /mapper/                   → Signal Mapper (can include ?node=<id> parameter)
 /monitor/                  → Repeater Monitor (planned)
 /nodes/<id>/               → Node detail view
 /admin/                    → Django admin interface
 /api/v1/nodes/            → Node list (GET) with filtering
+/api/v1/nodes/discover/   → Discover repeaters from radio (POST)
+/api/v1/nodes/add_node/   → Add discovered node to database (POST)
+/api/v1/nodes/<id>/       → Delete node (DELETE)
 /api/v1/measurements/     → Signal measurements (GET/POST)
 /api/v1/repeater-stats/   → Repeater telemetry (planned)
 /ws/signal/               → WebSocket for GPS/signal streaming
@@ -368,14 +414,15 @@ Both features share:
 
 ### Django Apps Structure
 
-**Current:** Single `max` app contains all features
+**Current:** Single `metro` app contains all features
 **Recommended Future:** Organize into separate apps
 ```
-meshcore-analytics/
+meshcore-metro/
 ├── core/              # Shared models (User, Node)
+├── mesh_config/       # Node discovery and management UI
 ├── repeater_monitor/  # RepeaterStats, NeighbourInfo, telemetry views
 ├── signal_mapper/     # SignalMeasurement, collection views
-└── api/              # REST API for both features
+└── api/              # REST API for all features
 ```
 
 ## Deployment Configuration
@@ -443,9 +490,6 @@ SERIAL_PORT=/dev/ttyACM0
 
 # Run migrations
 python manage.py migrate
-
-# Load radio contacts (if radio connected)
-python manage.py load_radio_data
 
 # Start development server
 python manage.py runserver
