@@ -16,7 +16,7 @@ export class HeatmapRenderer {
      */
     async loadData(targetNodeId) {
         try {
-            const response = await fetch(`/api/v1/traces/?session__target_node=${targetNodeId}&ordering=-timestamp`);
+            const response = await fetch(`/api/v1/traces/?field_test__target_node=${targetNodeId}&ordering=-timestamp`);
 
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);

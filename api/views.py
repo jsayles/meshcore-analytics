@@ -7,9 +7,9 @@ from django.utils import timezone
 from asgiref.sync import async_to_sync
 import asyncio
 
-from metro.models import Node, MappingSession, Trace, Role
+from metro.models import Node, FieldTest, Trace, Role
 from metro.radio_interface import RadioInterface
-from .serializers import NodeSerializer, MappingSessionSerializer, TraceSerializer
+from .serializers import NodeSerializer, FieldTestSerializer, TraceSerializer
 
 
 class NodeViewSet(viewsets.ModelViewSet):
@@ -96,14 +96,14 @@ class NodeViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class MappingSessionViewSet(viewsets.ModelViewSet):
+class FieldTestViewSet(viewsets.ModelViewSet):
     """
-    API endpoint for mapping sessions.
-    Supports creating, updating, and retrieving mapping sessions.
+    API endpoint for field tests.
+    Supports creating, updating, and retrieving field tests.
     """
 
-    queryset = MappingSession.objects.all().select_related("target_node")
-    serializer_class = MappingSessionSerializer
+    queryset = FieldTest.objects.all().select_related("target_node")
+    serializer_class = FieldTestSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["target_node", "end_time"]
     ordering_fields = ["start_time"]
@@ -116,9 +116,9 @@ class TraceViewSet(viewsets.ModelViewSet):
     Supports creating new traces and retrieving for heatmap display.
     """
 
-    queryset = Trace.objects.all().select_related("session__target_node")
+    queryset = Trace.objects.all().select_related("field_test__target_node")
     serializer_class = TraceSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ["session", "session__target_node"]
+    filterset_fields = ["field_test", "field_test__target_node"]
     ordering_fields = ["timestamp"]
     ordering = ["-timestamp"]

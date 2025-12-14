@@ -6,7 +6,7 @@ An integrated Django/GeoDjango web application for monitoring and analyzing Mesh
 
 1. **Mesh Configuration** - Discover and manage repeater contacts from your radio
 2. **Repeater Monitor** - Real-time health monitoring and telemetry tracking of mesh network repeater nodes
-3. **Signal Mapper** - Field survey tool for collecting and visualizing signal coverage heatmaps
+3. **Field Testing** - Field survey tool for collecting and visualizing signal coverage heatmaps
 
 The application is designed to run on a Raspberry Pi carried during field operations, combining USB-connected radio telemetry with phone-based GPS for comprehensive network analysis.
 
@@ -68,7 +68,7 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - Django admin interface functional
 - Frontend dashboard not yet implemented
 
-### Feature 3: Signal Mapper
+### Feature 3: Field Testing
 
 **Purpose:** Create signal coverage heatmaps for specific repeater nodes during field surveys.
 
@@ -77,7 +77,7 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - Collect GPS coordinates + signal strength measurements
 - Manual or continuous (interval-based) collection modes
 - Real-time heatmap visualization with color-coded signal strength
-- Session-based measurement tracking (Django session IDs)
+- Field test-based measurement tracking (Django FieldTest model)
 - Responsive sidebar interface (420px width)
 - Mobile-friendly with automatic GPS streaming
 - Automatic heatmap updates after each measurement
@@ -92,7 +92,7 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - ✅ Frontend web interface complete (Leaflet.js map)
 - ✅ REST API for measurements functional
 - ✅ WebSocket integration complete for GPS streaming
-- ✅ Session-based tracking with Django sessions
+- ✅ Field test-based tracking with Django FieldTest model
 - ✅ 3-step setup workflow with progress indicators
 - ✅ Responsive design for mobile devices
 
@@ -127,7 +127,7 @@ All features share:
      ┌─────▼──────┐
      │   Phone    │
      ├────────────┤
-     │ • GPS      │ → Sends coordinates to Pi (Signal Mapper)
+     │ • GPS      │ → Sends coordinates to Pi (Field Testing)
      │ • Cellular │ → Internet access
      │ • Browser  │ → Web interface at https://<hostname>.local:8443
      └────────────┘
@@ -140,7 +140,7 @@ All features share:
 - Phone maintains cellular internet connection
 - Pi accessible via mDNS at `https://<hostname>.local:8443` (HTTPS required for GPS)
 - Phone browser accesses Django app on same WiFi network
-- Phone sends GPS coordinates to Pi via secure WebSocket (Signal Mapper feature)
+- Phone sends GPS coordinates to Pi via secure WebSocket (Field Testing feature)
 - Self-signed SSL certificate generated during installation
 
 ### Component Roles
@@ -154,7 +154,7 @@ All features share:
 #### Raspberry Pi (Backpack Unit)
 - **Web Server**: Runs Django/Daphne application with HTTPS at `https://<hostname>.local:8443`
 - **Radio Interface**: Reads telemetry and signal data from USB-connected MeshCore radio via serial
-- **Data Processor**: Combines GPS stream from phone with radio signal data (Signal Mapper)
+- **Data Processor**: Combines GPS stream from phone with radio signal data (Field Testing)
 - **Data Logger**: Continuously collects repeater telemetry (Repeater Monitor)
 - **Database**: PostgreSQL + PostGIS stores all measurements, stats, and spatial data
 - **WiFi Client**: Connects to phone's hotspot for communication
@@ -191,7 +191,7 @@ All features share:
    - Frontend dashboard shows real-time health metrics
    - Admin interface provides detailed data exploration
 
-### Signal Mapper Flow
+### Field Testing Flow
 
 **3-Step Setup Process:**
 
@@ -328,7 +328,7 @@ All features share:
 
 ### HTTPS (Required for GPS/Positioning)
 - Web interface: `https://<hostname>.local:8443/`
-- Signal Mapper: `https://<hostname>.local:8443/mapper/` or `https://<hostname>.local:8443/mapper/?node=<id>`
+- Field Testing: `https://<hostname>.local:8443/field-testing/` or `https://<hostname>.local:8443/field-testing/?node=<id>`
 - Repeater Monitor: `https://<hostname>.local:8443/monitor/` (planned)
 - REST API: `https://<hostname>.local:8443/api/v1/`
   - Nodes: `GET /api/v1/nodes/?role=0&is_active=true`
@@ -383,7 +383,7 @@ All features share:
 - Unique constraint: (node, neighbour)
 - Enables mesh network visualization
 
-**SignalMeasurement** - Coverage heatmap data points (Signal Mapper)
+**Trace** - Coverage heatmap data points (Field Testing)
 - Spatial: `PointField(srid=4326)` for collection location
 - Fields: location, altitude, gps_accuracy, rssi, snr, target_node, session_id, collector_user
 - Indexes: (target_node, timestamp), session_id
@@ -399,7 +399,7 @@ All features share:
 ```
 /                          → Mesh network home (redirects to /config/ if no repeaters)
 /config/                   → Mesh Configuration (discover and manage repeaters)
-/mapper/                   → Signal Mapper (can include ?node=<id> parameter)
+/field-testing/            → Field Testing (can include ?node=<id> parameter)
 /monitor/                  → Repeater Monitor (planned)
 /nodes/<id>/               → Node detail view
 /admin/                    → Django admin interface
@@ -523,7 +523,7 @@ sudo systemctl start meshcore-telemetry
 - [ ] Mesh topology visualization with network graph
 - [ ] Repeater performance comparison tools
 
-### Signal Mapper
+### Field Testing
 - [x] 3-step setup workflow with progress indicators
 - [x] Session-based measurement tracking
 - [x] Real-time heatmap updates during collection

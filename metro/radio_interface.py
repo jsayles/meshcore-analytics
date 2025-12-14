@@ -79,14 +79,14 @@ class RadioInterface:
                 node_type = contact.get("type", 0)
                 contact_name = contact.get("adv_name", "unnamed")
 
-                # Debug: Log all contacts with their types
-                logger.info(f"Contact: {contact_name} | type={node_type}")
-
                 # Only include repeaters (type == 2)
                 # Type values: 1=Client, 2=Repeater, 3=Room Server
                 if node_type != 2:
-                    logger.info(f"  -> Filtered out (type={node_type}, expected 2 for repeater)")
                     continue
+
+                # Extract location if available
+                adv_lat = contact.get("adv_lat", 0)
+                adv_lon = contact.get("adv_lon", 0)
 
                 node_data = {
                     "pubkey": pubkey,
@@ -97,6 +97,12 @@ class RadioInterface:
                     "rssi": 0,
                     "path_len": 0,
                 }
+
+                # Add location if coordinates are non-zero
+                if adv_lat != 0 or adv_lon != 0:
+                    node_data["lat"] = adv_lat
+                    node_data["lon"] = adv_lon
+
                 discovered.append(node_data)
                 logger.info(f"  -> Added as repeater: {node_data.get('name', node_data['mesh_identity'][:8])}")
 

@@ -17,7 +17,7 @@ from channels.db import database_sync_to_async
 
 from django.contrib.gis.geos import Point
 
-from metro.models import MappingSession, Trace, Node
+from metro.models import FieldTest, Trace, Node
 
 logger = logging.getLogger(__name__)
 
@@ -108,31 +108,31 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         Combines current GPS data with signal data from radio and saves to database.
 
         Args:
-            message: dict with session_id (MappingSession ID)
+            message: dict with field_test_id (FieldTest ID)
         """
         try:
-            session_id = message.get("session_id")
+            field_test_id = message.get("field_test_id")
 
-            if not session_id:
-                await self.send_error("Missing session_id")
+            if not field_test_id:
+                await self.send_error("Missing field_test_id")
                 return
 
             if not self.current_gps:
                 await self.send_error("No GPS data available")
                 return
 
-            # Verify session exists and is active
-            session = await self.get_session(session_id)
-            if not session:
-                await self.send_error(f"Session {session_id} not found")
+            # Verify field test exists and is active
+            field_test = await self.get_field_test(field_test_id)
+            if not field_test:
+                await self.send_error(f"Field test {field_test_id} not found")
                 return
 
-            if not session["is_active"]:
-                await self.send_error(f"Session {session_id} is not active")
+            if not field_test["is_active"]:
+                await self.send_error(f"Field test {field_test_id} is not active")
                 return
 
             # Read current signal data from radio
-            signal_data = await self.get_signal_from_radio(session["target_node_id"])
+            signal_data = await self.get_signal_from_radio(field_test["target_node_id"])
 
             # Always save trace, even if trace failed
             if not signal_data:
@@ -147,7 +147,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
 
             # Save trace to database
             trace_id = await self.save_trace(
-                session_id=session_id,
+                field_test_id=field_test_id,
                 gps_data=self.current_gps,
                 signal_data=signal_data,
                 trace_success=trace_success,
@@ -200,33 +200,33 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def get_session(self, session_id):
+    def get_field_test(self, field_test_id):
         """
-        Get mapping session from database.
+        Get field test from database.
 
         Args:
-            session_id: MappingSession ID
+            field_test_id: FieldTest ID
 
         Returns:
-            dict with session info or None if not found
+            dict with field test info or None if not found
         """
         try:
-            session = MappingSession.objects.get(id=session_id)
+            field_test = FieldTest.objects.get(id=field_test_id)
             return {
-                "id": session.id,
-                "target_node_id": session.target_node.id,
-                "is_active": session.is_active,
+                "id": field_test.id,
+                "target_node_id": field_test.target_node.id,
+                "is_active": field_test.is_active,
             }
-        except MappingSession.DoesNotExist:
+        except FieldTest.DoesNotExist:
             return None
 
     @database_sync_to_async
-    def save_trace(self, session_id, gps_data, signal_data, trace_success):
+    def save_trace(self, field_test_id, gps_data, signal_data, trace_success):
         """
         Save trace to database.
 
         Args:
-            session_id: MappingSession ID
+            field_test_id: FieldTest ID
             gps_data: GPS coordinates and metadata
             signal_data: SNR values
             trace_success: Whether the trace succeeded
@@ -235,15 +235,15 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
             Trace ID
         """
         try:
-            # Get session
-            session = MappingSession.objects.get(id=session_id)
+            # Get field test
+            field_test = FieldTest.objects.get(id=field_test_id)
 
             # Create Point for location
             location = Point(gps_data["longitude"], gps_data["latitude"], srid=4326)
 
             # Create trace
             trace = Trace.objects.create(
-                session=session,
+                field_test=field_test,
                 location=location,
                 altitude=gps_data.get("altitude"),
                 gps_accuracy=gps_data.get("accuracy"),
@@ -254,8 +254,8 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
 
             return trace.id
 
-        except MappingSession.DoesNotExist:
-            msg = f"Session {session_id} not found"
+        except FieldTest.DoesNotExist:
+            msg = f"Field test {field_test_id} not found"
             raise ValueError(msg)
         except Exception as e:
             logger.error(f"Database error saving trace: {e}")

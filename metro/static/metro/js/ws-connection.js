@@ -238,7 +238,7 @@ export class WebSocketConnection {
      * Request signal measurement from Pi
      * Pi will combine current GPS stream with radio signal data
      */
-    requestMeasurement(sessionId) {
+    requestMeasurement(fieldTestId) {
         if (!this.isConnected || !this.ws) {
             throw new Error('Not connected to Pi');
         }
@@ -246,7 +246,7 @@ export class WebSocketConnection {
         try {
             this.ws.send(JSON.stringify({
                 type: 'request_measurement',
-                session_id: sessionId
+                field_test_id: fieldTestId
             }));
         } catch (error) {
             console.error('Failed to request measurement:', error);

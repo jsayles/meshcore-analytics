@@ -1,7 +1,7 @@
 {% extends "metro/base.html" %}
 {% load static %}
 
-{% block title %}MeshCore Signal Mapper{% endblock %}
+{% block title %}MeshCore Field Testing{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'metro/css/signal-mapper.css' %}">
@@ -15,7 +15,7 @@
     <!-- Control Sidebar -->
     <div id="sidebar">
         <a href="/" class="back-link">← Back to Home</a>
-        <h1>Signal Mapper</h1>
+        <h1>Field Testing</h1>
 
         <!-- Progress Checklist -->
         <div class="checklist">
@@ -123,9 +123,9 @@
 <script type="module" src="{% static 'metro/js/ws-connection.js' %}"></script>
 <script type="module" src="{% static 'metro/js/measurement-collector.js' %}"></script>
 <script type="module" src="{% static 'metro/js/heatmap-renderer.js' %}"></script>
-<script type="module" src="{% static 'metro/js/signal-mapper.js' %}"></script>
+<script type="module" src="{% static 'metro/js/field-testing.js' %}"></script>
 <script type="module">
-    import { SignalMapper } from "{% static 'metro/js/signal-mapper.js' %}";
+    import { SignalMapper } from "{% static 'metro/js/field-testing.js' %}";
 
     document.addEventListener('DOMContentLoaded', () => {
         const app = new SignalMapper();

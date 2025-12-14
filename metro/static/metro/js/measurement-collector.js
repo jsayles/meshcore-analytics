@@ -6,9 +6,9 @@
  */
 
 export class MeasurementCollector {
-    constructor(piConnection, sessionId) {
+    constructor(piConnection, fieldTestId) {
         this.piConnection = piConnection;
-        this.sessionId = sessionId;
+        this.fieldTestId = fieldTestId;
         this.mode = 'manual';
         this.interval = 5000; // milliseconds
         this.isCollecting = false;
@@ -81,7 +81,7 @@ export class MeasurementCollector {
                 // Request measurement from Pi
                 // Pi will combine current GPS stream with radio signal data
                 // The result will come back via the onMeasurementSaved callback
-                this.piConnection.requestMeasurement(this.sessionId);
+                this.piConnection.requestMeasurement(this.fieldTestId);
 
                 // Set a timeout in case the measurement never completes
                 setTimeout(() => {

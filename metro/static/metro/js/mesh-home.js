@@ -69,7 +69,7 @@ class NodeOverview {
             const coords = node.geometry?.coordinates;
 
             if (!coords || coords.length !== 2) {
-                console.warn(`Node ${props.id} has invalid coordinates`, node);
+                console.warn(`Node ${props.name || props.id} has invalid coordinates`, node);
                 return;
             }
 

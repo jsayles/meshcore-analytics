@@ -129,20 +129,20 @@ class NeighbourInfo(models.Model):
         return f"{self.neighbour} (neighbour of {self.node})"
 
 
-class MappingSession(models.Model):
+class FieldTest(models.Model):
     """
-    Represents an explicit mapping session where a user walks around collecting signal data.
-    Sessions must be explicitly started and ended.
+    Represents an explicit field test where a user walks around collecting signal data.
+    Field tests must be explicitly started and ended.
     """
 
     target_node = models.ForeignKey(Node, on_delete=models.CASCADE)
     start_time = models.DateTimeField(auto_now_add=True, db_index=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    notes = models.TextField(blank=True, help_text="Description of the mapping session")
+    notes = models.TextField(blank=True, help_text="Description of the field test")
 
     class Meta:
-        verbose_name = "Mapping Session"
-        verbose_name_plural = "Mapping Sessions"
+        verbose_name = "Field Test"
+        verbose_name_plural = "Field Tests"
         ordering = ["-start_time"]
         indexes = [
             models.Index(fields=["target_node", "-start_time"]),
@@ -150,7 +150,7 @@ class MappingSession(models.Model):
 
     def __str__(self):
         status = "active" if self.end_time is None else "completed"
-        return f"Mapping {self.target_node} ({status}) - {self.start_time}"
+        return f"Field Test {self.target_node} ({status}) - {self.start_time}"
 
     @property
     def is_active(self):
@@ -167,12 +167,12 @@ class MappingSession(models.Model):
 
 class Trace(models.Model):
     """
-    Stores individual signal trace measurements collected during a mapping session.
+    Stores individual signal trace measurements collected during a field test.
     Used for generating signal coverage heatmaps.
     """
 
-    # Link to mapping session
-    session = models.ForeignKey(MappingSession, on_delete=models.CASCADE)
+    # Link to field test
+    field_test = models.ForeignKey(FieldTest, on_delete=models.CASCADE)
 
     # Location (GeoDjango PointField - lon, lat order)
     location = gis_models.PointField(srid=4326, help_text="GPS coordinates (lon, lat)")
@@ -204,7 +204,7 @@ class Trace(models.Model):
         verbose_name_plural = "Traces"
         ordering = ["-timestamp"]
         indexes = [
-            models.Index(fields=["session", "-timestamp"]),
+            models.Index(fields=["field_test", "-timestamp"]),
         ]
 
     def __str__(self):
@@ -212,5 +212,5 @@ class Trace(models.Model):
 
     @property
     def target_node(self):
-        """Convenience property to access the target node through the session."""
-        return self.session.target_node
+        """Convenience property to access the target node through the field test."""
+        return self.field_test.target_node

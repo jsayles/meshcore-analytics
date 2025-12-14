@@ -1,6 +1,6 @@
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
-from metro.models import Node, MappingSession, Trace, Role
+from metro.models import Node, FieldTest, Trace, Role
 
 
 class NodeSerializer(GeoFeatureModelSerializer):
@@ -15,17 +15,17 @@ class NodeSerializer(GeoFeatureModelSerializer):
         fields = ["id", "name", "mesh_identity", "role", "is_active", "last_seen", "location", "estimated_range"]
 
 
-class MappingSessionSerializer(serializers.ModelSerializer):
+class FieldTestSerializer(serializers.ModelSerializer):
     """
-    Serializer for MappingSession model.
-    Handles explicit mapping sessions with start/end times.
+    Serializer for FieldTest model.
+    Handles explicit field tests with start/end times.
     """
 
     is_active = serializers.ReadOnlyField()
     duration = serializers.ReadOnlyField()
 
     class Meta:
-        model = MappingSession
+        model = FieldTest
         fields = [
             "id",
             "target_node",
@@ -41,17 +41,17 @@ class MappingSessionSerializer(serializers.ModelSerializer):
 class TraceSerializer(GeoFeatureModelSerializer):
     """
     Serializer for Trace model with GeoJSON support.
-    Handles individual signal trace measurements during a mapping session.
+    Handles individual signal trace measurements during a field test.
     """
 
-    target_node = serializers.ReadOnlyField(source="session.target_node.id")
+    target_node = serializers.ReadOnlyField(source="field_test.target_node.id")
 
     class Meta:
         model = Trace
         geo_field = "location"
         fields = [
             "id",
-            "session",
+            "field_test",
             "location",
             "altitude",
             "gps_accuracy",

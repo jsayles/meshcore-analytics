@@ -1,5 +1,5 @@
 /**
- * Signal Mapper Main Application
+ * Field Testing Main Application
  *
  * Coordinates WebSocket connection, measurement collection, and heatmap rendering.
  */
@@ -14,7 +14,7 @@ class SignalMapper {
         this.wsConnection = new WebSocketConnection();
         this.collector = null;
         this.heatmapRenderer = null;
-        this.currentSession = null;
+        this.currentFieldTest = null;
         this.targetNodeId = null;
         this.repeaters = [];
         this.currentStep = 1;
@@ -264,8 +264,8 @@ class SignalMapper {
             btn.disabled = true;
             btn.textContent = 'Starting...';
 
-            // Create session via API
-            const response = await fetch('/api/v1/sessions/', {
+            // Create field test via API
+            const response = await fetch('/api/v1/field-tests/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -278,16 +278,16 @@ class SignalMapper {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create session');
+                throw new Error('Failed to create field test');
             }
 
-            this.currentSession = await response.json();
+            this.currentFieldTest = await response.json();
 
             // Update UI
             document.getElementById('session-start').style.display = 'none';
             document.getElementById('session-active').style.display = 'block';
             document.getElementById('session-start-time').textContent =
-                new Date(this.currentSession.start_time).toLocaleString();
+                new Date(this.currentFieldTest.start_time).toLocaleString();
 
             // Show collection section
             document.getElementById('collection-section').style.display = 'block';
@@ -303,10 +303,10 @@ class SignalMapper {
     }
 
     /**
-     * End the current mapping session
+     * End the current field test
      */
     async endSession() {
-        if (!this.currentSession) {
+        if (!this.currentFieldTest) {
             return;
         }
 
@@ -316,8 +316,8 @@ class SignalMapper {
             btn.disabled = true;
             btn.textContent = 'Ending...';
 
-            // Update session via API
-            const response = await fetch(`/api/v1/sessions/${this.currentSession.id}/`, {
+            // Update field test via API
+            const response = await fetch(`/api/v1/field-tests/${this.currentFieldTest.id}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -329,7 +329,7 @@ class SignalMapper {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to end session');
+                throw new Error('Failed to end field test');
             }
 
             // Stop any active collection
@@ -342,9 +342,9 @@ class SignalMapper {
             document.getElementById('session-active').style.display = 'none';
             document.getElementById('collection-section').style.display = 'none';
 
-            this.showMessage('Session ended successfully!', 'success');
+            this.showMessage('Field test ended successfully!', 'success');
 
-            this.currentSession = null;
+            this.currentFieldTest = null;
 
         } catch (error) {
             console.error('Failed to end session:', error);
@@ -423,8 +423,8 @@ class SignalMapper {
      * Collect single manual measurement
      */
     async collectManual() {
-        if (!this.currentSession) {
-            this.showMessage('Please start a session first', 'warning');
+        if (!this.currentFieldTest) {
+            this.showMessage('Please start a field test first', 'warning');
             return;
         }
 
@@ -440,7 +440,7 @@ class SignalMapper {
             if (!this.collector) {
                 this.collector = new MeasurementCollector(
                     this.wsConnection,
-                    this.currentSession.id
+                    this.currentFieldTest.id
                 );
                 this.collector.onMeasurement = (data) => this.updateSessionInfo(data);
             }
@@ -470,8 +470,8 @@ class SignalMapper {
      * Start continuous collection
      */
     startContinuous() {
-        if (!this.currentSession) {
-            this.showMessage('Please start a session first', 'warning');
+        if (!this.currentFieldTest) {
+            this.showMessage('Please start a field test first', 'warning');
             return;
         }
 
@@ -482,7 +482,7 @@ class SignalMapper {
         if (!this.collector) {
             this.collector = new MeasurementCollector(
                 this.wsConnection,
-                this.currentSession.id
+                this.currentFieldTest.id
             );
             this.collector.onMeasurement = (data) => this.updateSessionInfo(data);
         }

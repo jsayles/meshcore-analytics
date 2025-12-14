@@ -22,7 +22,7 @@ def node_detail(request, node_id):
     return render(request, "metro/node_detail.html", {"node": node})
 
 
-def signal_mapper(request):
-    """Render the signal mapping interface"""
-    # Sessions are now created explicitly via API when user starts mapping
-    return render(request, "metro/signal_mapper.html")
+def field_testing(request):
+    """Render the field testing interface"""
+    # Field tests are now created explicitly via API when user starts testing
+    return render(request, "metro/field_testing.html")

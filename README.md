@@ -7,7 +7,7 @@ An integrated Django/GeoDjango web application for monitoring and analyzing Mesh
 **Three complementary features:**
 1. **Mesh Configuration** - Discover and manage repeater contacts from your radio
 2. **Repeater Monitor** - Real-time health monitoring and telemetry tracking
-3. **Signal Mapper** - Field survey tool for signal coverage heatmaps
+3. **Field Testing** - Field survey tool for signal coverage heatmaps
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full architecture details.
 
