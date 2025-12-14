@@ -1,7 +1,7 @@
 """
 Simple interface for reading signal data from MeshCore radio using trace commands.
 
-Used by Signal Mapper WebSocket consumer for on-demand signal readings.
+Used by Field Test WebSocket consumer for on-demand signal readings.
 """
 
 import asyncio
@@ -195,24 +195,16 @@ class RadioInterface:
         """Async context manager support."""
         await self.disconnect()
 
+    async def get_all_contacts(self):
+        """
+        Get all contact data from radio for bulk operations.
 
-# Global radio instance for WebSocket consumer to use
-_radio_instance = None
-_radio_lock = asyncio.Lock()
+        Returns:
+            dict: Dictionary of contacts from the radio
+        """
+        if not self.mc:
+            logger.error("Radio not connected")
+            return {}
 
-
-async def get_radio_interface():
-    """
-    Get or create global radio interface instance.
-
-    Returns:
-        RadioInterface instance
-    """
-    global _radio_instance
-
-    async with _radio_lock:
-        if _radio_instance is None:
-            _radio_instance = RadioInterface()
-            await _radio_instance.connect()
-
-        return _radio_instance
+        await self.mc.ensure_contacts()
+        return self.mc.contacts

@@ -4,7 +4,7 @@
 {% block title %}MeshCore Field Testing{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'metro/css/signal-mapper.css' %}">
+<link rel="stylesheet" href="{% static 'metro/css/field-testing.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -125,10 +125,10 @@
 <script type="module" src="{% static 'metro/js/heatmap-renderer.js' %}"></script>
 <script type="module" src="{% static 'metro/js/field-testing.js' %}"></script>
 <script type="module">
-    import { SignalMapper } from "{% static 'metro/js/field-testing.js' %}";
+    import { FieldTester } from "{% static 'metro/js/field-testing.js' %}";
 
     document.addEventListener('DOMContentLoaded', () => {
-        const app = new SignalMapper();
+        const app = new FieldTester();
         app.init();
     });
 </script>

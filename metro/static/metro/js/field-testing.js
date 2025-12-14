@@ -8,7 +8,7 @@ import { WebSocketConnection } from './ws-connection.js';
 import { MeasurementCollector } from './measurement-collector.js';
 import { HeatmapRenderer } from './heatmap-renderer.js';
 
-class SignalMapper {
+class FieldTester {
     constructor() {
         this.map = null;
         this.wsConnection = new WebSocketConnection();
@@ -599,5 +599,5 @@ class SignalMapper {
 
 }
 
-// Export SignalMapper
-export { SignalMapper };
+// Export FieldTester
+export { FieldTester };

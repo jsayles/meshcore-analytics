@@ -1,5 +1,5 @@
 /**
- * signal-mapper.css - Styles specific to the signal mapper page
+ * field-testing.css - Styles specific to the field testing page
  * Common styles are in max.css
  */
 
@@ -259,7 +259,7 @@
     color: var(--primary-color);
 }
 
-/* Status messages specific positioning for signal mapper */
+/* Status messages specific positioning for field testing */
 #status-messages {
     right: calc(var(--sidebar-width) + 20px);
 }

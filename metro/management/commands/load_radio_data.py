@@ -14,11 +14,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from metro.models import Node, Role
-
-try:
-    from meshcore import MeshCore, SerialConnection
-except ImportError:
-    raise CommandError("meshcore library not found")
+from metro.radio import RadioInterface
 
 
 class Command(BaseCommand):
@@ -40,24 +36,27 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Connecting to {port}...")
 
-        serial_cx = SerialConnection(port=port, baudrate=115200)
-        mc = MeshCore(cx=serial_cx)
+        radio = RadioInterface(port=port)
 
         try:
-            await mc.connect()
+            connection_successful = await radio.connect()
+            if not connection_successful:
+                msg = f"Failed to connect to radio on {port}"
+                raise CommandError(msg)
+
             self.stdout.write(self.style.SUCCESS("Connected"))
 
             # Get contacts
-            await mc.ensure_contacts()
-            await self.store_contacts(mc.contacts)
+            contacts = await radio.get_all_contacts()
+            await self.update_radio_data(contacts)
 
             self.stdout.write(self.style.SUCCESS("Done"))
 
         finally:
-            await mc.disconnect()
+            await radio.disconnect()
 
-    async def store_contacts(self, contacts_data):
-        """Update existing nodes with latest contact data from radio"""
+    async def update_radio_data(self, contacts_data):
+        """Update existing nodes with latest data from radio"""
         if not contacts_data:
             self.stdout.write("No contacts found")
             return
@@ -67,10 +66,7 @@ class Command(BaseCommand):
         existing_set = set(existing_nodes)
 
         self.stdout.write(f"Found {len(contacts_data)} contacts on radio")
-        self.stdout.write(f"Found {len(existing_nodes)} nodes in database")
-
-        updated_count = 0
-        skipped_count = 0
+        self.stdout.write(f"Found {len(existing_nodes)} nodes in our mesh")
 
         for key, contact in contacts_data.items():
             public_key = contact.get("public_key", "")
@@ -81,7 +77,6 @@ class Command(BaseCommand):
 
             # Only update nodes that already exist in database
             if mesh_identity not in existing_set:
-                skipped_count += 1
                 continue
 
             # Map firmware type to role: Client (1) stays Client, everything else becomes Repeater
@@ -105,10 +100,5 @@ class Command(BaseCommand):
             # Update existing node
             await sync_to_async(Node.objects.filter(mesh_identity=mesh_identity).update)(**update_data)
 
-            updated_count += 1
             location_info = f" (lat: {adv_lat:.6f}, lon: {adv_lon:.6f})" if update_data.get("location") else ""
             self.stdout.write(f"  Updated: {contact.get('adv_name', mesh_identity)}{location_info}")
-
-        self.stdout.write(self.style.SUCCESS(f"\nUpdated {updated_count} nodes"))
-        if skipped_count > 0:
-            self.stdout.write(f"Skipped {skipped_count} contacts not in database (use mesh_config UI to add them)")

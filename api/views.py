@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync
 import asyncio
 
 from metro.models import Node, FieldTest, Trace, Role
-from metro.radio_interface import RadioInterface
+from metro.radio import RadioInterface
 from .serializers import NodeSerializer, FieldTestSerializer, TraceSerializer
 
 

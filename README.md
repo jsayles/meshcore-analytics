@@ -81,7 +81,7 @@ uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 ## Development Commands
 
 ```bash
-# Run with Channels/WebSocket support (REQUIRED for Signal Mapper)
+# Run with Channels/WebSocket support (REQUIRED for Field Test)
 uv run daphne -b 0.0.0.0 -p 8000 metro.asgi:application
 
 # Find connected USB radios

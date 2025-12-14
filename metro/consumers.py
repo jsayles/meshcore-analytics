@@ -18,6 +18,7 @@ from channels.db import database_sync_to_async
 from django.contrib.gis.geos import Point
 
 from metro.models import FieldTest, Trace, Node
+from metro.radio import RadioInterface
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +41,24 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.current_gps = None
         self.current_signal = None
+        self.radio = None
 
     async def connect(self):
         """Accept WebSocket connection from phone."""
         await self.accept()
         logger.info("Phone connected to WebSocket")
 
+        # Initialize radio connection
+        self.radio = RadioInterface()
+        await self.radio.connect()
+
         # Send welcome message
         await self.send(text_data=json.dumps({"type": "connected", "message": "Connected to Pi"}))
 
     async def disconnect(self, close_code):
         """Handle WebSocket disconnection."""
+        if self.radio:
+            await self.radio.disconnect()
         logger.info(f"Phone disconnected from WebSocket: {close_code}")
 
     async def receive(self, text_data):
@@ -183,17 +191,16 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
         Returns:
             dict with rssi and snr, or None if unavailable
         """
-        from metro.radio_interface import get_radio_interface
-
         try:
             # Get target node from database
             target_node = await database_sync_to_async(Node.objects.get)(id=target_node_id)
 
-            # Get radio interface (already async)
-            radio = await get_radio_interface()
+            if not self.radio:
+                logger.error("Radio not initialized")
+                return None
 
             # Get signal data via trace command
-            signal_data = await radio.get_current_signal(target_node)
+            signal_data = await self.radio.get_current_signal(target_node)
             return signal_data
         except Exception as e:
             logger.error(f"Failed to read signal from radio: {e}")

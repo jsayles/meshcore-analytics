@@ -146,9 +146,9 @@ All features share:
 ### Component Roles
 
 #### Phone (iOS/Android Browser)
-- **GPS Provider**: Streams real-time GPS coordinates via browser Geolocation API (Signal Mapper)
+- **GPS Provider**: Streams real-time GPS coordinates via browser Geolocation API (Field Test)
 - **Internet Gateway**: Provides cellular data connection to Pi
-- **User Interface**: Web browser displays both Repeater Monitor dashboard and Signal Mapper
+- **User Interface**: Web browser displays both Repeater Monitor dashboard and Field Test
 - **WiFi Hotspot**: Creates network for Pi to connect to
 
 #### Raspberry Pi (Backpack Unit)
@@ -292,9 +292,9 @@ All features share:
 - GeoJSON - Spatial data format
 
 **Communication**
-- WebSocket API - Real-time GPS streaming to Pi (Signal Mapper)
+- WebSocket API - Real-time GPS streaming to Pi (Field Test)
 - Fetch API - REST API calls for data retrieval (both features)
-- Geolocation API - GPS from phone (Signal Mapper)
+- Geolocation API - GPS from phone (Field Test)
 
 **UI**
 - Responsive HTML/CSS/JS (ES6 modules)
@@ -421,7 +421,7 @@ meshcore-metro/
 ├── core/              # Shared models (User, Node)
 ├── mesh_config/       # Node discovery and management UI
 ├── repeater_monitor/  # RepeaterStats, NeighbourInfo, telemetry views
-├── signal_mapper/     # SignalMeasurement, collection views
+├── field_testing/     # FieldTest, Trace models and views
 └── api/              # REST API for all features
 ```
 
