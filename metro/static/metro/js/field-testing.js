@@ -176,7 +176,7 @@ class FieldTester {
             const nodeId = e.target.value;
             if (nodeId && nodeId !== 'undefined' && nodeId !== '') {
                 // Redirect to same page with node parameter
-                window.location.href = `/mapper/?node=${nodeId}`;
+                window.location.href = `/field-tests/?node=${nodeId}`;
             }
         });
 

@@ -33,6 +33,12 @@
         .navbar a.active {
             background: #3498db;
         }
+        .navbar .brand-title {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 20px;
+        }
         .navbar .gear-icon {
             margin-left: auto;
             font-size: 20px;
@@ -44,8 +50,9 @@
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
+        <span class="brand-title">MeshCore METRO:</span>
         <a href="{% url 'home' %}" {% if request.path == '/' %}class="active"{% endif %}>Home</a>
-        <a href="{% url 'field_testing' %}" {% if 'field-testing' in request.path %}class="active"{% endif %}>Field Testing</a>
+        <a href="{% url 'field_test' %}" {% if 'field-testing' in request.path %}class="active"{% endif %}>Field Tests</a>
         <a href="{% url 'mesh_config' %}" class="gear-icon" title="Configuration" {% if 'config' in request.path %}style="background: #3498db;"{% endif %}>⚙️</a>
     </nav>
 
