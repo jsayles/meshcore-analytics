@@ -11,7 +11,6 @@
 <div id="app">
     <!-- Navigation Header -->
     <div class="header">
-        <a href="/" class="back-link">← Back to Overview</a>
         <h1>{{ node.name|default:"Unnamed Node" }}</h1>
     </div>
 
@@ -64,7 +63,7 @@
             {% if node.role == 0 %}
             <!-- Field Testing Actions (Repeaters only) -->
             <div class="actions">
-                <a href="/field-testing/?node={{ node.id }}" class="btn btn-primary">
+                <a href="{% url 'field_test' %}?node={{ node.id }}" class="btn btn-primary">
                     📡 Field Test
                 </a>
             </div>
