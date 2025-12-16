@@ -102,6 +102,7 @@ echo "=> Creating database user for $USER..."
 (cd /tmp && sudo -u postgres psql -c "CREATE USER $USER WITH PASSWORD '';")
 (cd /tmp && sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE metrodb TO $USER;")
 (cd /tmp && sudo -u postgres psql metrodb -c "GRANT ALL ON SCHEMA public TO $USER;")
+(cd /tmp && sudo -u postgres psql metrodb -c "ALTER SCHEMA public OWNER TO $USER;")
 
 # Install Python dependencies first
 echo "=> Installing Python dependencies..."

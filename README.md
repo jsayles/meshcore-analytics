@@ -103,19 +103,22 @@ uv lock --upgrade
 uv sync
 ```
 
+## System Architecture
+
+The application provides three integrated features: Mesh Configuration for managing repeater contacts, Repeater Monitor for real-time telemetry tracking, and Field Testing for signal coverage heatmaps. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed feature specifications and roadmap.
+
 ## Related Projects
 
-### MeshCore MQTT Broker
-**Repository:** https://github.com/michaelhart/meshcore-mqtt-broker
+See [docs/RELATED_PROJECTS.md](docs/RELATED_PROJECTS.md) for a list of MeshCore mapping systems, visualization tools, and related projects in the ecosystem.
 
-**Important Note:** The main developer (Tree) runs the main meshcore-analyzer website. This MQTT broker project may have overlapping functionality with our platform. We should coordinate with them as there may be opportunities to merge or integrate our projects in the future.
 
 ## Next Steps
 
-- [ ] Fine-tune MeshCore radio API integration 
+- [ ] Better Installation docs and scripts
+- [ ] Improved mobile interface
+- [ ] Enhanced Field Test log view and merging.
 - [ ] Build Repeater Monitor frontend dashboard
 - [ ] Deploy to Raspberry Pi with systemd services
 - [ ] Add advanced heatmap interpolation
 - [ ] Evaluate integration opportunities with meshcore-mqtt-broker
 
-See full roadmap in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
