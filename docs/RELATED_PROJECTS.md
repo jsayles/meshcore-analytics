@@ -11,6 +11,11 @@ The main developer (Tree) runs the main meshcore-analyzer website. This MQTT bro
 
 Built with JavaScript and deployed on Cloudflare's serverless infrastructure, it provides tools for visualizing signal coverage patterns, managing repeater locations, and wardriving data collection. The application helps network administrators track and analyze mesh network coverage across geographical areas using MQTT message data.
 
+## MeshCore WebUI (mc-webui)
+**Repository:** https://github.com/MarekWo/mc-webui
+
+Web interface for the meshcore CLI.  Could be good for integration or collaboration.
+
 ## Official MeshCore Maps
 
 ### MeshCore Node Map
@@ -46,6 +51,10 @@ A comprehensive real-time map, chat client, and packet analysis tool for MeshCor
 A dedicated visualization tool specifically designed for mesh network coverage data analysis.
 
 ## Key Features Across Projects
+
+## Edgemap
+
+** Repository:** https://github.com/resiliencetheatre/rpi4edgemap
 
 Many of these tools support **Trace Path Map mode**, which allows users to:
 - Click on nodes in a specific order to visualize routing paths
