@@ -52,7 +52,7 @@
     <nav class="navbar">
         <span class="brand-title">MeshCore METRO:</span>
         <a href="{% url 'home' %}" {% if request.path == '/' %}class="active"{% endif %}>Home</a>
-        <a href="{% url 'field_test' %}" {% if 'field-testing' in request.path %}class="active"{% endif %}>Field Tests</a>
+        <a href="{% url 'field_test' %}" {% if 'field-tests' in request.path %}class="active"{% endif %}>Field Tests</a>
         <a href="{% url 'mesh_config' %}" class="gear-icon" title="Configuration" {% if 'config' in request.path %}style="background: #3498db;"{% endif %}>⚙️</a>
     </nav>
 

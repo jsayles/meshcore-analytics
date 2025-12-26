@@ -20,6 +20,9 @@ class FieldTester {
         this.currentStep = 1;
         this.locationShared = false;
         this.lastTraceStartTime = null;
+        this.repeaterMarker = null;
+        this.userMarker = null;
+        this.userLocation = null;
     }
 
     /**
@@ -87,6 +90,9 @@ class FieldTester {
             document.getElementById('status-repeater').style.color = 'var(--success-color)';
             document.getElementById('repeater-select').style.display = 'none';
             this.currentStep = 2;
+
+            // Zoom to repeater location if available
+            this.zoomToRepeater(repeater);
         } else {
             this.currentStep = 1;
         }
@@ -102,6 +108,36 @@ class FieldTester {
     }
 
     /**
+     * Zoom map to repeater location and add marker
+     */
+    zoomToRepeater(repeater) {
+        if (repeater && repeater.geometry && repeater.geometry.coordinates) {
+            const coords = repeater.geometry.coordinates;
+            const latLng = [coords[1], coords[0]]; // [lat, lon]
+
+            // Add marker for repeater
+            if (this.repeaterMarker) {
+                this.map.removeLayer(this.repeaterMarker);
+            }
+
+            this.repeaterMarker = L.marker(latLng, {
+                icon: L.divIcon({
+                    className: 'repeater-marker',
+                    html: '<div style="background: #3498db; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📡 ' + (repeater.properties.name || repeater.properties.mesh_identity) + '</div>',
+                    iconSize: null
+                })
+            }).addTo(this.map);
+
+            // If we have user location, fit bounds to show both, otherwise just zoom to repeater
+            if (this.userLocation) {
+                this.fitBoundsToLocations();
+            } else {
+                this.map.setView(latLng, 15);
+            }
+        }
+    }
+
+    /**
      * Request user location
      */
     requestLocation() {
@@ -109,14 +145,31 @@ class FieldTester {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     this.locationShared = true;
+                    this.userLocation = [position.coords.latitude, position.coords.longitude];
+
                     const statusElement = document.getElementById('status-location');
                     statusElement.textContent = 'Enabled';
                     statusElement.style.color = 'var(--success-color)';
 
-                    this.map.setView(
-                        [position.coords.latitude, position.coords.longitude],
-                        15
-                    );
+                    // Add user location marker
+                    if (this.userMarker) {
+                        this.map.removeLayer(this.userMarker);
+                    }
+
+                    this.userMarker = L.marker(this.userLocation, {
+                        icon: L.divIcon({
+                            className: 'user-marker',
+                            html: '<div style="background: #27ae60; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📍 You</div>',
+                            iconSize: null
+                        })
+                    }).addTo(this.map);
+
+                    // Fit bounds to show both locations if repeater is selected, otherwise just user location
+                    if (this.targetNodeId && this.repeaterMarker) {
+                        this.fitBoundsToLocations();
+                    } else {
+                        this.map.setView(this.userLocation, 15);
+                    }
 
                     if (this.currentStep === 2) {
                         this.currentStep = 3;
@@ -136,6 +189,25 @@ class FieldTester {
             );
         } else {
             document.getElementById('status-location').textContent = 'Not supported';
+        }
+    }
+
+    /**
+     * Fit map bounds to show both repeater and user location
+     */
+    fitBoundsToLocations() {
+        const bounds = [];
+
+        if (this.repeaterMarker) {
+            bounds.push(this.repeaterMarker.getLatLng());
+        }
+
+        if (this.userMarker) {
+            bounds.push(this.userMarker.getLatLng());
+        }
+
+        if (bounds.length > 0) {
+            this.map.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
         }
     }
 
@@ -539,8 +611,8 @@ class FieldTester {
             this.showMessage('Measurement collected successfully!', 'success');
         }
 
-        // Auto-refresh heatmap with new data
-        this.loadAndDisplayHeatmap();
+        // Auto-refresh heatmap with new data (fit bounds to show new measurements)
+        this.loadAndDisplayHeatmap(true);
     }
 
     /**
@@ -561,15 +633,16 @@ class FieldTester {
 
     /**
      * Load and display heatmap automatically
+     * @param {boolean} fitBounds - Whether to auto-zoom to fit all measurements (default: false on initial load)
      */
-    async loadAndDisplayHeatmap() {
+    async loadAndDisplayHeatmap(fitBounds = false) {
         if (!this.targetNodeId) {
             return;
         }
 
         try {
             await this.heatmapRenderer.loadData(this.targetNodeId);
-            this.heatmapRenderer.render();
+            this.heatmapRenderer.render(null, fitBounds);
 
             const count = this.heatmapRenderer.measurements.length;
             console.log(`Heatmap updated with ${count} measurements`);

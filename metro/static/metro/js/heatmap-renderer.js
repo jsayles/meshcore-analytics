@@ -43,8 +43,10 @@ export class HeatmapRenderer {
 
     /**
      * Render heatmap on map
+     * @param {Array} measurements - Optional measurements to render
+     * @param {boolean} fitBounds - Whether to auto-zoom to fit all measurements (default: true)
      */
-    render(measurements = null) {
+    render(measurements = null, fitBounds = true) {
         if (measurements) {
             this.measurements = measurements;
         }
@@ -88,8 +90,8 @@ export class HeatmapRenderer {
 
         this.heatLayer.addTo(this.map);
 
-        // Fit map bounds to show all points
-        if (this.measurements.length > 0) {
+        // Fit map bounds to show all points (optional)
+        if (fitBounds && this.measurements.length > 0) {
             const bounds = this.measurements.map(feature => {
                 const coords = feature.geometry.coordinates;
                 return [coords[1], coords[0]]; // [lat, lon]
