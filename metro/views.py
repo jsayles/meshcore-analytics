@@ -7,13 +7,23 @@ def mesh_home(request):
     """Render the network overview map showing all nodes"""
     # Redirect to config if no repeaters in database
     if Node.objects.filter(role=Role.REPEATER).count() == 0:
-        return redirect("mesh_config")
+        return redirect("config_mesh")
     return render(request, "metro/mesh_home.html")
 
 
-def mesh_config(request):
-    """Render the mesh configuration interface"""
-    return render(request, "metro/mesh_config.html")
+def config_redirect(request):
+    """Redirect /config/ to /config/mesh/"""
+    return redirect("config_mesh")
+
+
+def config_mesh(request):
+    """Mesh configuration page - repeaters management"""
+    return render(request, "metro/config_mesh.html")
+
+
+def config_hotspot(request):
+    """Hotspot configuration page - WiFi management"""
+    return render(request, "metro/config_hotspot.html")
 
 
 def node_detail(request, node_id):

@@ -24,6 +24,7 @@ class FieldTester {
         this.userMarker = null;
         this.userLocation = null;
         this.isRadioConnected = false;
+        this.isHotspotConnected = false;
     }
 
     /**
@@ -57,8 +58,10 @@ class FieldTester {
         // Initialize step states
         this.initializeSteps();
 
-        // Request location permission
-        this.requestLocation();
+        // Only request location if repeater is already selected
+        if (this.targetNodeId) {
+            this.requestLocation();
+        }
     }
 
     /**
@@ -174,10 +177,10 @@ class FieldTester {
 
                     if (this.currentStep === 2) {
                         this.currentStep = 3;
-                        // Show the connect button
-                        document.getElementById('btn-connect').style.display = 'inline-block';
+                        // Start all checks in parallel - don't block on hotspot
+                        this.checkHotspot();
 
-                        // Auto-connect to radio now that location is granted
+                        // Auto-connect to WebSocket immediately (don't wait for hotspot)
                         if (this.targetNodeId) {
                             this.autoConnectToWS();
                         }
@@ -234,11 +237,58 @@ class FieldTester {
     }
 
     /**
+     * Check hotspot connection status (Step 3)
+     */
+    async checkHotspot() {
+        const statusElement = document.getElementById('status-hotspot');
+        const retryBtn = document.getElementById('btn-retry-hotspot');
+        const warningBox = document.getElementById('hotspot-warning');
+        const errorMsg = document.getElementById('hotspot-error-message');
+
+        try {
+            statusElement.textContent = 'Checking...';
+            statusElement.style.color = 'var(--text-muted)';
+
+            const response = await fetch('/api/v1/hotspot/status/');
+            const data = await response.json();
+
+            if (data.configured && data.connected) {
+                // SUCCESS: Both configured and connected
+                this.isHotspotConnected = true;
+                statusElement.textContent = `Connected (${data.ssid})`;
+                statusElement.style.color = 'var(--success-color)';
+                retryBtn.style.display = 'none';
+                warningBox.style.display = 'none';
+            } else {
+                // FAILURE: Not connected or not configured
+                this.isHotspotConnected = false;
+                statusElement.textContent = data.configured ? 'Disconnected' : 'Not configured';
+                statusElement.style.color = 'var(--danger-color)';
+                retryBtn.style.display = 'inline-block';
+                warningBox.style.display = 'block';
+                errorMsg.textContent = data.error || 'Hotspot not connected';
+                this.showMessage('Hotspot not connected. Configure in Settings or retry.', 'warning');
+            }
+        } catch (error) {
+            console.error('Hotspot check failed:', error);
+            statusElement.textContent = 'Check failed';
+            statusElement.style.color = 'var(--danger-color)';
+            retryBtn.style.display = 'inline-block';
+            warningBox.style.display = 'block';
+            errorMsg.textContent = 'Failed to check hotspot status';
+            this.showMessage('Failed to check hotspot status', 'error');
+        }
+    }
+
+    /**
      * Setup UI event handlers
      */
     setupEventHandlers() {
         // WebSocket Connection
         document.getElementById('btn-connect').addEventListener('click', () => this.connectToWS());
+
+        // Hotspot retry button
+        document.getElementById('btn-retry-hotspot').addEventListener('click', () => this.checkHotspot());
 
         // Radio status retry button
         document.getElementById('btn-retry-radio').addEventListener('click', () => this.retryRadioConnection());
@@ -247,7 +297,7 @@ class FieldTester {
         document.getElementById('btn-start-session').addEventListener('click', () => this.startSession());
         document.getElementById('btn-end-session').addEventListener('click', () => this.endSession());
 
-        // Repeater selection - redirect to URL with node parameter
+        // Repeater selection - redirect to URL with node parameter (which will trigger location)
         document.getElementById('repeater-select').addEventListener('change', (e) => {
             const nodeId = e.target.value;
             if (nodeId && nodeId !== 'undefined' && nodeId !== '') {

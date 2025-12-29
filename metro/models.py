@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.urls import reverse
+from encrypted_model_fields.fields import EncryptedCharField
 
 
 class Role(models.IntegerChoices):
@@ -214,3 +215,32 @@ class Trace(models.Model):
     def target_node(self):
         """Convenience property to access the target node through the field test."""
         return self.field_test.target_node
+
+
+class HotspotConfig(models.Model):
+    """
+    Singleton model storing WiFi hotspot configuration.
+    Only one hotspot can be configured at a time.
+    """
+
+    ssid = models.CharField(max_length=255, blank=True, help_text="WiFi hotspot SSID")
+    password = EncryptedCharField(max_length=255, blank=True, help_text="Encrypted WiFi password")
+
+    class Meta:
+        verbose_name = "Hotspot Configuration"
+        verbose_name_plural = "Hotspot Configuration"
+
+    def save(self, *args, **kwargs):
+        # Enforce singleton - only one config allowed
+        if not self.pk and HotspotConfig.objects.exists():
+            raise ValueError("Only one hotspot configuration allowed")
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Hotspot: {self.ssid or 'Not configured'}"
+
+    @classmethod
+    def get_instance(cls):
+        """Get or create the singleton instance."""
+        instance, _ = cls.objects.get_or_create(pk=1, defaults={"ssid": "", "password": ""})
+        return instance

@@ -2,11 +2,12 @@
 
 ## Overview
 
-An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks. The app runs on a Raspberry Pi and provides three complementary features:
+An integrated Django/GeoDjango web application for monitoring and analyzing MeshCore mesh networks. The app runs on a Raspberry Pi and provides four complementary features:
 
 1. **Mesh Configuration** - Discover and manage repeater contacts from your radio
 2. **Repeater Monitor** - Real-time health monitoring and telemetry tracking of mesh network repeater nodes
 3. **Field Testing** - Field survey tool for collecting and visualizing signal coverage heatmaps
+4. **WiFi Hotspot Configuration** - Configure Pi's connection to phone's WiFi hotspot
 
 The application is designed to run on a Raspberry Pi carried during field operations, combining USB-connected radio telemetry with phone-based GPS for comprehensive network analysis.
 
@@ -39,7 +40,7 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - ✅ Search and pagination implemented
 
 **Workflow:**
-1. First-time users redirected to `/config/` automatically
+1. First-time users redirected to `/config/mesh/` automatically
 2. Page loads existing repeaters from database (top section)
 3. Auto-discovers available repeaters from radio (bottom section)
 4. User clicks star icon and "Add to Mesh" to add repeaters
@@ -96,15 +97,51 @@ The application is designed to run on a Raspberry Pi carried during field operat
 - ✅ 3-step setup workflow with progress indicators
 - ✅ Responsive design for mobile devices
 
+### Feature 4: WiFi Hotspot Configuration
+
+**Purpose:** Configure and manage the Raspberry Pi's connection to a phone's WiFi hotspot.
+
+**Capabilities:**
+- Save WiFi hotspot SSID and password to database
+- Scan for available WiFi networks (Linux only)
+- Connect to configured hotspot
+- View current connection status
+- Platform-specific implementations (Linux with NetworkManager, macOS database-only)
+
+**Implementation:**
+- Platform abstraction via `wifi_hotspot.py` subsystem
+- Linux: Full NetworkManager/nmcli integration for scanning, configuring, and connecting
+- macOS: Database storage only (for development), manual connection required
+- Configuration stored in `HotspotConfig` model (singleton pattern)
+- Auto-connects on boot via NetworkManager connection profile
+
+**Current Status:**
+- ✅ WiFi hotspot subsystem with platform detection
+- ✅ REST API endpoints (`/api/v1/hotspot/config/`, `/scan/`, `/configure/`, `/connect/`, `/capabilities/`)
+- ✅ Frontend UI at `/config/hotspot/`
+- ✅ Network scanning with signal strength display (Linux)
+- ✅ Connection status monitoring
+- ✅ Navbar submenu for Mesh/Hotspot configuration tabs
+
+**Workflow:**
+1. User navigates to `/config/hotspot/`
+2. (Optional) Click "Scan Networks" to discover available WiFi networks
+3. Select network from dropdown or enter SSID manually
+4. Enter WiFi password
+5. Click "Save Configuration" to store credentials and create NetworkManager profile
+6. Click "Connect Now" to establish connection (or Pi auto-connects on next boot)
+
 ### Feature Integration
 
 All features share:
 - **Node Registry** - Central database of mesh network devices
 - **Radio Interface** - USB serial connection to MeshCore radio
 - **Spatial Database** - PostGIS for location-aware queries
+- **WiFi Management** - Unified hotspot configuration system
 - **User Management** - Unified authentication and admin interface
 - **REST API** - Common API structure for data access
 - **Admin Interface** - Single control panel for all data
+- **Configuration UI** - Tabbed interface for Mesh and Hotspot settings
 
 ## Core Architecture
 
@@ -137,6 +174,9 @@ All features share:
 
 - **Phone creates WiFi hotspot** (iOS Personal Hotspot or Android Hotspot)
 - **Pi connects TO phone's WiFi hotspot** (not creating its own)
+  - Configured via `/config/hotspot/` web interface
+  - Credentials stored in database and NetworkManager (Linux)
+  - Auto-connects on boot via NetworkManager connection profile
 - Phone maintains cellular internet connection
 - Pi accessible via mDNS at `https://<hostname>.local:8443` (HTTPS required for GPS)
 - Phone browser accesses Django app on same WiFi network
@@ -383,6 +423,12 @@ All features share:
 - Unique constraint: (node, neighbour)
 - Enables mesh network visualization
 
+**HotspotConfig** - WiFi hotspot credentials (WiFi Configuration)
+- Singleton model (only one instance exists)
+- Fields: ssid (CharField), password (EncryptedCharField)
+- Password encrypted at rest using django-encrypted-model-fields
+- Accessed via `HotspotConfig.get_instance()` class method
+
 **Trace** - Coverage heatmap data points (Field Testing)
 - Spatial: `PointField(srid=4326)` for collection location
 - Fields: location, altitude, gps_accuracy, rssi, snr, target_node, session_id, collector_user
@@ -397,29 +443,54 @@ All features share:
 
 ### URL Routing
 ```
-/                          → Mesh network home (redirects to /config/ if no repeaters)
-/config/                   → Mesh Configuration (discover and manage repeaters)
-/field-testing/            → Field Testing (can include ?node=<id> parameter)
-/monitor/                  → Repeater Monitor (planned)
-/nodes/<id>/               → Node detail view
-/admin/                    → Django admin interface
-/api/v1/nodes/            → Node list (GET) with filtering
-/api/v1/nodes/discover/   → Discover repeaters from radio (POST)
-/api/v1/nodes/add_node/   → Add discovered node to database (POST)
-/api/v1/nodes/<id>/       → Delete node (DELETE)
-/api/v1/measurements/     → Signal measurements (GET/POST)
-/api/v1/repeater-stats/   → Repeater telemetry (planned)
-/ws/signal/               → WebSocket for GPS/signal streaming
+/                              → Mesh network home (redirects to /config/mesh/ if no repeaters)
+/config/                       → Redirects to /config/mesh/
+/config/mesh/                  → Mesh Configuration (discover and manage repeaters)
+/config/hotspot/               → WiFi Hotspot Configuration
+/field-testing/                → Field Testing (can include ?node=<id> parameter)
+/monitor/                      → Repeater Monitor (planned)
+/nodes/<id>/                   → Node detail view
+/admin/                        → Django admin interface
+/api/v1/nodes/                → Node list (GET) with filtering
+/api/v1/nodes/discover/       → Discover repeaters from radio (POST)
+/api/v1/nodes/add_node/       → Add discovered node to database (POST)
+/api/v1/nodes/<id>/           → Delete node (DELETE)
+/api/v1/field-tests/          → Field test CRUD operations
+/api/v1/traces/               → Trace measurements (GET/POST)
+/api/v1/repeater-stats/       → Repeater telemetry (planned)
+/api/v1/hotspot/config/       → Get current hotspot config (GET)
+/api/v1/hotspot/capabilities/ → Check platform WiFi capabilities (GET)
+/api/v1/hotspot/scan/         → Scan for WiFi networks (POST, Linux only)
+/api/v1/hotspot/configure/    → Save hotspot credentials (POST)
+/api/v1/hotspot/connect/      → Connect to configured hotspot (POST)
+/api/v1/hotspot/status/       → Check connection status (GET)
+/ws/signal/                   → WebSocket for GPS/signal streaming
 ```
 
 ### Django Apps Structure
 
-**Current:** Single `metro` app contains all features
-**Recommended Future:** Organize into separate apps
+**Current:** Two apps with separation of concerns
+```
+meshcore-metro/
+├── metro/                     # Main Django app
+│   ├── models.py             # Core models (Node, FieldTest, Trace, HotspotConfig)
+│   ├── views.py              # Web views (home, config pages, field testing)
+│   ├── admin.py              # Django admin configuration
+│   ├── subsystems/           # Platform-specific subsystems
+│   │   └── wifi_hotspot.py   # WiFi management with Linux/macOS implementations
+│   └── templates/metro/      # HTML templates
+└── api/                      # REST API app
+    ├── views.py              # API ViewSets (NodeViewSet, HotspotViewSet, etc.)
+    ├── serializers.py        # DRF serializers
+    └── urls.py               # API URL routing
+```
+
+**Recommended Future:** Further organize into feature-based apps
 ```
 meshcore-metro/
 ├── core/              # Shared models (User, Node)
 ├── mesh_config/       # Node discovery and management UI
+├── wifi_config/       # WiFi hotspot configuration and subsystems
 ├── repeater_monitor/  # RepeaterStats, NeighbourInfo, telemetry views
 ├── field_testing/     # FieldTest, Trace models and views
 └── api/              # REST API for all features

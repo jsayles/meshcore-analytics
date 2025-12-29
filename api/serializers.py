@@ -1,6 +1,7 @@
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
-from metro.models import Node, FieldTest, Trace, Role
+from metro.models import Node, FieldTest, Trace, Role, HotspotConfig
+from metro.subsystems import wifi_hotspot
 
 
 class NodeSerializer(GeoFeatureModelSerializer):
@@ -62,3 +63,44 @@ class TraceSerializer(GeoFeatureModelSerializer):
             "timestamp",
         ]
         read_only_fields = ["id", "timestamp", "target_node"]
+
+
+class HotspotConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for HotspotConfig model.
+    Password is write-only for security.
+    """
+
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    connection_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HotspotConfig
+        fields = ["id", "ssid", "password", "connection_status"]
+        read_only_fields = ["id", "connection_status"]
+
+    def get_connection_status(self, _obj):
+        try:
+            wifi_manager = wifi_hotspot.get_wifi_manager()
+            return wifi_manager.check_status()
+        except wifi_hotspot.UnsupportedPlatformError:
+            return {
+                "connected": False,
+                "ssid": None,
+                "error": "Platform not supported",
+                "platform_support": False,
+                "last_check": None,
+            }
+
+    def create(self, validated_data):
+        instance = HotspotConfig.get_instance()
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
+
+    def update(self, instance, validated_data):
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance

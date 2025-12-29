@@ -1,15 +1,22 @@
+import asyncio
+import logging
+import platform
+
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.gis.geos import Point
 from django.utils import timezone
-from asgiref.sync import async_to_sync
-import asyncio
 
-from metro.models import Node, FieldTest, Trace, Role
+from api.serializers import NodeSerializer, FieldTestSerializer, TraceSerializer, HotspotConfigSerializer
+
+from metro.models import Node, FieldTest, Trace, Role, HotspotConfig
 from metro.radio import RadioInterface
-from .serializers import NodeSerializer, FieldTestSerializer, TraceSerializer
+from metro.subsystems import wifi_hotspot
+
+logger = logging.getLogger(__name__)
 
 
 class NodeViewSet(viewsets.ModelViewSet):
@@ -122,3 +129,112 @@ class TraceViewSet(viewsets.ModelViewSet):
     filterset_fields = ["field_test", "field_test__target_node"]
     ordering_fields = ["timestamp"]
     ordering = ["-timestamp"]
+
+
+class HotspotViewSet(viewsets.ViewSet):
+    """WiFi hotspot management endpoints."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.wifi_manager = wifi_hotspot.get_wifi_manager()
+        except wifi_hotspot.UnsupportedPlatformError as e:
+            logger.error(f"WiFi hotspot not supported: {e}")
+            self.wifi_manager = None
+
+    @action(detail=False, methods=["get"])
+    def config(self, request):
+        """GET /api/v1/hotspot/config/ - Get current config (no password)"""
+        instance = HotspotConfig.get_instance()
+        serializer = HotspotConfigSerializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def capabilities(self, request):
+        """GET /api/v1/hotspot/capabilities/ - Check what features are available"""
+        if not self.wifi_manager:
+            return Response({"can_scan": False, "platform": platform.system()})
+        return Response({"can_scan": self.wifi_manager.can_scan(), "platform": platform.system()})
+
+    @action(detail=False, methods=["post"])
+    def scan(self, request):
+        """POST /api/v1/hotspot/scan/ - Scan WiFi networks"""
+        if not self.wifi_manager:
+            return Response({"error": "WiFi management not supported on this platform"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            networks = self.wifi_manager.scan_networks()
+            return Response({"networks": networks, "count": len(networks)})
+        except (RuntimeError, NotImplementedError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["post"])
+    def configure(self, request):
+        """POST /api/v1/hotspot/configure/ - Save SSID/password"""
+        ssid = request.data.get("ssid")
+        password = request.data.get("password")
+
+        if not ssid or not password:
+            return Response({"error": "SSID and password required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not self.wifi_manager:
+            return Response({"error": "WiFi management not supported on this platform"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Configure platform (no-op on Mac, NetworkManager on Linux)
+            self.wifi_manager.configure(ssid, password)
+
+            # Always save to database
+            instance = HotspotConfig.get_instance()
+            serializer = HotspotConfigSerializer(instance, data={"ssid": ssid, "password": password}, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            return Response({"success": True, "message": f"Hotspot configured for {ssid}", "config": serializer.data})
+        except RuntimeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=["post"])
+    def connect(self, request):
+        """POST /api/v1/hotspot/connect/ - Connect to configured hotspot"""
+        instance = HotspotConfig.get_instance()
+        if not instance.ssid:
+            return Response({"error": "No hotspot configured"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not self.wifi_manager:
+            return Response({"error": "WiFi management not supported on this platform"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            self.wifi_manager.connect()
+            return Response({"success": True, "message": f"Connected to {instance.ssid}", "ssid": instance.ssid})
+        except (RuntimeError, NotImplementedError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["get"])
+    def status(self, request):
+        """GET /api/v1/hotspot/status/ - Check connection status"""
+        instance = HotspotConfig.get_instance()
+
+        if not self.wifi_manager:
+            return Response(
+                {
+                    "configured": bool(instance.ssid),
+                    "ssid": instance.ssid if instance.ssid else None,
+                    "connected": False,
+                    "error": "Platform not supported",
+                    "platform_support": False,
+                    "last_check": None,
+                }
+            )
+
+        nm_status = self.wifi_manager.check_status()
+        return Response(
+            {
+                "configured": bool(instance.ssid),
+                "ssid": instance.ssid if instance.ssid else None,
+                "connected": nm_status.get("connected", False),
+                "error": nm_status.get("error"),
+                "platform_support": nm_status.get("platform_support", True),
+                "last_check": nm_status.get("last_check"),
+            }
+        )

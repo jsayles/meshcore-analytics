@@ -54,6 +54,13 @@
                         <button id="btn-retry-radio" class="btn btn-primary btn-sm" style="display: none; margin-left: 8px;">Retry Radio</button>
                     </div>
 
+                    <!-- Step 5: Hotspot Connection -->
+                    <div class="init-item">
+                        <span class="init-label">Hotspot:</span>
+                        <span id="status-hotspot" class="init-status">Waiting...</span>
+                        <button id="btn-retry-hotspot" class="btn btn-primary btn-sm" style="display: none; margin-left: 8px;">Retry</button>
+                    </div>
+
                     <!-- Connect Button -->
                     <div class="init-item" style="margin-top: 8px;">
                         <button id="btn-connect" class="btn btn-primary btn-sm" style="display: none; width: 100%;">Connect</button>
@@ -73,6 +80,21 @@
             </p>
             <p class="warning-help">
                 Please check that the MeshCore radio is connected via USB and powered on.
+            </p>
+        </div>
+
+        <!-- Hotspot Warning Box -->
+        <div id="hotspot-warning" class="warning-box" style="display: none;">
+            <div class="warning-header">
+                <span class="warning-icon">⚠️</span>
+                <span class="warning-title">Hotspot Not Connected</span>
+            </div>
+            <p id="hotspot-error-message" class="warning-message">
+                WiFi hotspot is not connected.
+            </p>
+            <p class="warning-help">
+                Field operations require WiFi connection.
+                <a href="/config/">Configure hotspot in Settings</a>.
             </p>
         </div>
 

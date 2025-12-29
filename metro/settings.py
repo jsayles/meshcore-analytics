@@ -27,6 +27,21 @@ load_dotenv(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-upmjwp^-n6p*5=t1-(_3q!wjarpv9z0_m%#0^9pxjhmdm1u)8h")
 
+# Encryption key for django-encrypted-model-fields
+# Requires a 32-byte base64-encoded key for Fernet encryption
+import base64
+from cryptography.fernet import Fernet
+
+if "FIELD_ENCRYPTION_KEY" in os.environ:
+    FIELD_ENCRYPTION_KEY = os.environ["FIELD_ENCRYPTION_KEY"]
+else:
+    # Generate a deterministic key from SECRET_KEY for development
+    # In production, use a proper base64-encoded 32-byte key
+    import hashlib
+
+    key_material = hashlib.sha256(SECRET_KEY.encode()).digest()
+    FIELD_ENCRYPTION_KEY = base64.urlsafe_b64encode(key_material)
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.gis.admin import GISModelAdmin
-from .models import Node, RepeaterStats, NeighbourInfo, FieldTest, Trace
+from .models import Node, RepeaterStats, NeighbourInfo, FieldTest, Trace, HotspotConfig
 
 
 @admin.register(Node)
@@ -94,3 +94,15 @@ class TraceAdmin(GISModelAdmin):
         ("Location", {"fields": ["location", "altitude", "gps_accuracy"]}),
         ("Signal Data", {"fields": ["snr_to_target", "snr_from_target", "trace_success"]}),
     ]
+
+
+@admin.register(HotspotConfig)
+class HotspotConfigAdmin(admin.ModelAdmin):
+    list_display = ["ssid"]
+    readonly_fields = ["password"]
+
+    def has_add_permission(self, request):
+        return not HotspotConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

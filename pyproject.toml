@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "django~=6.0",
+    "django-encrypted-model-fields~=0.6.5",
     "django-filter~=25.1",
     "djangorestframework~=3.16",
     "djangorestframework-gis~=1.2",
@@ -39,12 +40,42 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint]
-# Aspire to include all DJ rules --JLS
-# https://pypi.org/project/flake8-django/
-# https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/#model-style
-ignore = ["DJ001", "DJ006", "EM101"]
-select = ["E", "F", "W", "UP", "EM", "DJ"]
+ignore = ["DJ001", "DJ006", "EM101", "ANN401"]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "W",      # pycodestyle warnings
+    "UP",     # pyupgrade (modernize Python code)
+    "EM",     # flake8-errmsg
+    "DJ",     # flake8-django
+    "ANN",    # flake8-annotations (type hints)
+    "TCH",    # flake8-type-checking (TYPE_CHECKING imports)
+]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
+
+[tool.pyright]
+include = ["metro", "api"]
+exclude = ["**/node_modules", "**/__pycache__", "**/migrations"]
+typeCheckingMode = "basic"
+pythonVersion = "3.14"
+pythonPlatform = "All"
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnusedImport = true
+reportUnusedVariable = true
+reportDuplicateImport = true
+reportOptionalMemberAccess = true
+reportOptionalSubscript = true
+reportPrivateImportUsage = false
+reportGeneralTypeIssues = true
+reportUntypedFunctionDecorator = false
+reportUntypedClassDecorator = false
+reportUntypedBaseClass = false
+reportConstantRedefinition = true
+reportIncompatibleMethodOverride = true
+reportIncompatibleVariableOverride = true
+venvPath = "."
+venv = ".venv"
 

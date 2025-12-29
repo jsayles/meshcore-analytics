@@ -4,7 +4,7 @@
 {% block title %}Mesh Configuration{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'metro/css/mesh-config.css' %}">
+<link rel="stylesheet" href="{% static 'metro/css/config.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -69,9 +69,9 @@
     if (!window.meshConfigInitialized) {
         window.meshConfigInitialized = true;
         document.addEventListener('DOMContentLoaded', () => {
-            const app = new MeshConfig();
-            window.meshConfig = app;
-            app.init();
+            const meshApp = new MeshConfig();
+            window.meshConfig = meshApp;
+            meshApp.init();
         });
     }
 </script>
