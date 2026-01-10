@@ -531,7 +531,10 @@ SECRET_KEY=<secure-random-key>
 SERIAL_PORT=/dev/ttyACM0
 ```
 
-**Note:** `ALLOWED_HOSTS=*` allows any hostname, making the Pi accessible regardless of hostname configuration.
+**Notes:**
+- `ALLOWED_HOSTS=*` allows any hostname, making the Pi accessible regardless of hostname configuration
+- `SECRET_KEY` is used for both Django session/CSRF security and field encryption (via SHA-256 derivation)
+- The encryption key for `django-encrypted-model-fields` is automatically derived from `SECRET_KEY` using SHA-256
 
 ### Systemd Services
 - `meshcore-web.service` - Django/Daphne server (both features)
@@ -551,6 +554,15 @@ SERIAL_PORT=/dev/ttyACM0
 - Anonymous measurement collection supported
 - Session IDs for grouping measurements
 - No sensitive data transmitted
+
+### Encryption
+- WiFi passwords stored encrypted using `django-encrypted-model-fields`
+- Encryption key derived from `SECRET_KEY` using SHA-256 hash
+- Fernet symmetric encryption (AES-128-CBC with HMAC-SHA256)
+- Password never exposed in API responses (write-only field)
+- Ensure `SECRET_KEY` is properly secured in production
+
+**Important:** WiFi passwords briefly appear in system process lists during configuration due to NetworkManager CLI limitations. This is standard behavior for `nmcli` commands and passwords are quickly removed from memory once the connection profile is created.
 
 ## Development Workflow
 

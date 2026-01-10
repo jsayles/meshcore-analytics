@@ -71,13 +71,33 @@ class HotspotConfigSerializer(serializers.ModelSerializer):
     Password is write-only for security.
     """
 
-    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    ssid = serializers.CharField(min_length=1, max_length=32, required=False, help_text="WiFi SSID (1-32 characters)")
+    password = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=False,
+        min_length=8,
+        max_length=63,
+        help_text="WiFi password (8-63 characters for WPA/WPA2)",
+    )
     connection_status = serializers.SerializerMethodField()
 
     class Meta:
         model = HotspotConfig
         fields = ["id", "ssid", "password", "connection_status"]
         read_only_fields = ["id", "connection_status"]
+
+    def validate_ssid(self, value):
+        """Validate SSID contains only printable characters."""
+        if not value.isprintable():
+            raise serializers.ValidationError("SSID must contain only printable characters")
+        return value
+
+    def validate_password(self, value):
+        """Validate password meets WPA2-PSK requirements."""
+        if not value.isprintable():
+            raise serializers.ValidationError("Password must contain only printable characters")
+        return value
 
     def get_connection_status(self, _obj):
         try:

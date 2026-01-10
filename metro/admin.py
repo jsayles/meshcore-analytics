@@ -99,7 +99,7 @@ class TraceAdmin(GISModelAdmin):
 @admin.register(HotspotConfig)
 class HotspotConfigAdmin(admin.ModelAdmin):
     list_display = ["ssid"]
-    readonly_fields = ["password"]
+    exclude = ["password"]  # Hide password field for security
 
     def has_add_permission(self, request):
         return not HotspotConfig.objects.exists()

@@ -229,6 +229,9 @@ class HotspotConfig(models.Model):
     class Meta:
         verbose_name = "Hotspot Configuration"
         verbose_name_plural = "Hotspot Configuration"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(id=1), name="hotspot_config_singleton"),
+        ]
 
     def save(self, *args, **kwargs):
         # Enforce singleton - only one config allowed

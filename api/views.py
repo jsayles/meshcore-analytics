@@ -2,7 +2,7 @@ import asyncio
 import logging
 import platform
 
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets, filters, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -64,7 +64,11 @@ class NodeViewSet(viewsets.ModelViewSet):
             return Response({"count": len(filtered_nodes), "nodes": filtered_nodes})
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Node discovery failed: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Failed to discover nodes. Please check radio connection."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @action(detail=False, methods=["post"])
     def add_node(self, request):
@@ -74,20 +78,21 @@ class NodeViewSet(viewsets.ModelViewSet):
         """
         try:
             data = request.data
-
-            # Check if node already exists
             mesh_identity = data.get("mesh_identity")
-            if Node.objects.filter(mesh_identity=mesh_identity).exists():
-                return Response({"error": "Node already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create node from discovery data
-            node = Node.objects.create(
+            # Use get_or_create to avoid race condition
+            node, created = Node.objects.get_or_create(
                 mesh_identity=mesh_identity,
-                public_key=data.get("pubkey", ""),
-                name=data.get("name", ""),
-                role=Role.CLIENT if data.get("node_type") == 1 else Role.REPEATER,
-                last_seen=timezone.now(),
+                defaults={
+                    "public_key": data.get("pubkey", ""),
+                    "name": data.get("name", ""),
+                    "role": Role.CLIENT if data.get("node_type") == 1 else Role.REPEATER,
+                    "last_seen": timezone.now(),
+                },
             )
+
+            if not created:
+                return Response({"error": "Node already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Add location if provided
             lat = data.get("lat")
@@ -100,7 +105,11 @@ class NodeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.error(f"Failed to add node: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Failed to add node. Please verify the data and try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class FieldTestViewSet(viewsets.ModelViewSet):
@@ -165,8 +174,16 @@ class HotspotViewSet(viewsets.ViewSet):
         try:
             networks = self.wifi_manager.scan_networks()
             return Response({"networks": networks, "count": len(networks)})
-        except (RuntimeError, NotImplementedError) as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except NotImplementedError:
+            logger.warning("WiFi scan not implemented on this platform")
+            return Response(
+                {"error": "Network scanning not available on this platform"}, status=status.HTTP_501_NOT_IMPLEMENTED
+            )
+        except RuntimeError as e:
+            logger.error(f"WiFi scan failed: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Failed to scan networks. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=["post"])
     def configure(self, request):
@@ -191,8 +208,19 @@ class HotspotViewSet(viewsets.ViewSet):
             serializer.save()
 
             return Response({"success": True, "message": f"Hotspot configured for {ssid}", "config": serializer.data})
+        except serializers.ValidationError:
+            # Re-raise validation errors from serializer
+            raise
         except RuntimeError as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"WiFi configuration failed: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Failed to configure WiFi hotspot. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error during WiFi configuration: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "An unexpected error occurred. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=["post"])
     def connect(self, request):
@@ -207,8 +235,17 @@ class HotspotViewSet(viewsets.ViewSet):
         try:
             self.wifi_manager.connect()
             return Response({"success": True, "message": f"Connected to {instance.ssid}", "ssid": instance.ssid})
-        except (RuntimeError, NotImplementedError) as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except NotImplementedError:
+            logger.warning("WiFi connect not implemented on this platform")
+            return Response(
+                {"error": "WiFi connection not available on this platform"}, status=status.HTTP_501_NOT_IMPLEMENTED
+            )
+        except RuntimeError as e:
+            logger.error(f"WiFi connection failed: {str(e)}", exc_info=True)
+            return Response(
+                {"error": "Failed to connect to WiFi hotspot. Please verify the credentials and try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @action(detail=False, methods=["get"])
     def status(self, request):

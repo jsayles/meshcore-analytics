@@ -39,7 +39,7 @@ class SignalStreamConsumer(AsyncWebsocketConsumer):
     - error: Error message
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.current_gps = None
         self.current_signal = None

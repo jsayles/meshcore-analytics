@@ -25,4 +25,8 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Hotspot Configuration",
             },
         ),
+        migrations.AddConstraint(
+            model_name="hotspotconfig",
+            constraint=models.CheckConstraint(condition=models.Q(id=1), name="hotspot_config_singleton"),
+        ),
     ]
